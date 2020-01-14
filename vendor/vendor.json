@@ -1,0 +1,13 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "Snh0Da35ylxzxs3AA25EQtLV8fI=",
+			"path": "github.com/streadway/amqp",
+			"revision": "55cd81a10b0c3b411968dfeb3cdd2adb4cb975a7",
+			"revisionTime": "2020-01-08T11:25:37Z"
+		}
+	],
+	"rootPath": "github.com/sab.io/escola-service-sab.io"
+}
