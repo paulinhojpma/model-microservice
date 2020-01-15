@@ -1,5 +1,5 @@
 {
-  "URL": "ampq://rabbitMQ:5032",
+  "URL": "amqp://guest:guest@localhost:5672/",
   "driver": "rabbitMQ",
   "args": {
     "exchange": {
@@ -8,7 +8,7 @@
       "durable": true,
       "internal": false,
       "noWait": false
-    },  
+    },
     "queues": [
       {
         "name": "escola",

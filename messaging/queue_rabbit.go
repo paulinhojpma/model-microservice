@@ -67,11 +67,11 @@ func (rab *Rabbit) connectService(config *OptionsMessageCLient) error {
 			if errChannels != nil {
 				log.Println("Erro ao gerar novos Channels - ", errChannels)
 			}
-			time.Sleep(time.Second)
+
 		}
 
 	}()
-
+	time.Sleep(time.Second * 10)
 	channel, errChannel := rab.getActiveChannel()
 	if errChannel != nil {
 		return errChannel
@@ -82,7 +82,7 @@ func (rab *Rabbit) connectService(config *OptionsMessageCLient) error {
 		return errExc
 	}
 	rab.Exchange = exchange
-	errQueue := channel.configToQueues(config.Args["queue"].([]interface{}), exchange)
+	errQueue := channel.configToQueues(config.Args["queues"].([]interface{}), exchange)
 	if errQueue != nil {
 		return errQueue
 	}
@@ -104,6 +104,8 @@ func (rab *Rabbit) generateIdleChannels(maxPoolSize int) error {
 			if errCha != nil {
 				return errCha
 			}
+			channel := &Channel{}
+			rab.Channels[i] = channel
 			rab.Channels[i].Channel = chann
 			rab.Channels[i].Used = false
 			rab.Channels[i].Closed = false
@@ -149,13 +151,21 @@ func (rab *Rabbit) PublishMessage(routing string, params *MessageParam) error {
 	}
 	c.lockChannel()
 	defer c.unLockChannel()
+	parms, errPar := interfaceToByte(params.Params)
+	if errPar != nil {
+		return errPar
+	}
+	query, errQuer := interfaceToByte(params.Query)
+	if errQuer != nil {
+		return errQuer
+	}
 	publishing := &amqp.Publishing{
 		ContentType: "application/json",
 		Body:        params.Body,
 		Headers: amqp.Table{
 			"method":   params.Method,
-			"params":   params.Params,
-			"query":    params.Query,
+			"params":   parms,
+			"query":    query,
 			"resource": params.Resource,
 			"status":   params.Status,
 			"type":     params.Type,
@@ -202,8 +212,18 @@ func (rab *Rabbit) ReceiveMessage(routing string) (<-chan MessageParam, error) {
 		for d := range delivery {
 			msg.Body = d.Body
 			msg.Method = d.Headers["method"].(string)
-			msg.Params = d.Headers["params"].(map[string]int)
-			msg.Query = d.Headers["query"].(map[string][]string)
+
+			params, errParam := byteToInterface(d.Headers["params"].([]byte))
+			if errParam != nil {
+				log.Println(errParam)
+			}
+			msg.Params = params.(map[string]int)
+			query, errQuery := byteToInterface(d.Headers["query"].([]byte))
+			if errQuery != nil {
+				log.Println(errQuery)
+			}
+
+			msg.Query = query.(map[string][]string)
 			msg.Resource = d.Headers["resource"].(string)
 			msg.Status = d.Headers["status"].(int)
 			msg.Type = d.Headers["type"].(string)
@@ -344,9 +364,9 @@ func (c *Channel) configToExchange(exc map[string]interface{}) (*Exchange, error
 	if exc["internal"] == nil {
 		return nil, errors.New("Valor de configuração 'internal' vazio")
 	}
-	if exc["kind"] == nil {
-		return nil, errors.New("Valor de configuração 'kind' vazio")
-	}
+	// if exc["kind"] == nil {
+	// 	return nil, errors.New("Valor de configuração 'kind' vazio")
+	// }
 	if exc["name"] == nil {
 		return nil, errors.New("Valor de configuração 'name' vazio")
 	}
@@ -357,7 +377,7 @@ func (c *Channel) configToExchange(exc map[string]interface{}) (*Exchange, error
 	exchange.autoDelete = exc["autoDelete"].(bool)
 	exchange.durable = exc["durable"].(bool)
 	exchange.internal = exc["internal"].(bool)
-	exchange.kind = exc["kind"].(string)
+	// exchange.kind = exc["kind"].(string)
 	exchange.name = exc["name"].(string)
 	exchange.noWait = exc["noWait"].(bool)
 	errChannel := c.Channel.ExchangeDeclare(

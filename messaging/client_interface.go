@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 )
 
+//IMessageClient ...
 type IMessageClient interface {
 	connectService(config *OptionsMessageCLient) error
 	PublishMessage(routing string, params *MessageParam) error
@@ -35,19 +36,21 @@ type MessageParam struct {
 
 //ConfiguraFilaMensagens checa qual a aplicação da fila de mensagens e faz as configuração a partir dele
 func (o *OptionsMessageCLient) ConfiguraFilaMensagens() (*IMessageClient, error) {
-	var iMessage *IMessageClient
+	var iMessage IMessageClient
 	switch o.Driver {
 	case "rabbitMQ":
 
-		rab := Rabbit{}
+		rab := &Rabbit{}
 
 		errRab := rab.connectService(o)
 		if errRab != nil {
 			return nil, errRab
+
 		}
+		iMessage = rab
 
 	}
-	return iMessage, nil
+	return &iMessage, nil
 }
 
 //MountMessageQueue monta a menssagem a ser enviada

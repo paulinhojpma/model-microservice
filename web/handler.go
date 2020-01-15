@@ -1,5 +1,7 @@
 package web
 
+import "github.com/sab.io/escola-service/messaging"
+
 type Handler struct {
 	// Relic        newrelic.Application
 	// ClientRedis  *redis.Client
@@ -9,4 +11,5 @@ type Handler struct {
 	// GodinAuthURL string
 	// Upgrader     websocket.Upgrader
 	// EmailConf    map[string]string
+	Messaging *messaging.IMessageClient
 }
