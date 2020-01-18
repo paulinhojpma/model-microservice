@@ -10,6 +10,7 @@ type IMessageClient interface {
 	PublishMessage(routing string, params *MessageParam) error
 	ReceiveMessage(routing string) (<-chan MessageParam, error)
 	PublishAndReceiveMessage(routing string, params *MessageParam) (*MessageParam, error)
+	RespondMessage(routing string, params *MessageParam) error
 }
 
 type Connection interface {
@@ -24,13 +25,13 @@ type OptionsMessageCLient struct {
 
 //MessageParam ...
 type MessageParam struct {
-	Method   string                 `json:"method"`
-	Query    map[string][]string    `json:"query"`
-	Params   map[string]int         `json:"params"`
-	Resource string                 `json:"resource"`
-	Type     string                 `json:"type"`
-	Status   int                    `json:"status"`
-	Body     []byte                 `json:"body"`
+	Method   string              `json:"method"`
+	Query    map[string][]string `json:"query"`
+	Params   map[string]int      `json:"params"`
+	Resource string              `json:"resource"`
+	Type     string              `json:"type"`
+	Status   int                 `json:"status"`
+	Body     []byte
 	Args     map[string]interface{} `json:"args"`
 }
 

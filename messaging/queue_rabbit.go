@@ -1,6 +1,7 @@
 package messaging
 
 import (
+	"encoding/json"
 	"errors"
 	"log"
 	"time"
@@ -71,7 +72,7 @@ func (rab *Rabbit) connectService(config *OptionsMessageCLient) error {
 		}
 
 	}()
-	time.Sleep(time.Second * 10)
+	time.Sleep(time.Second * 1)
 	channel, errChannel := rab.getActiveChannel()
 	if errChannel != nil {
 		return errChannel
@@ -151,27 +152,62 @@ func (rab *Rabbit) PublishMessage(routing string, params *MessageParam) error {
 	}
 	c.lockChannel()
 	defer c.unLockChannel()
-	parms, errPar := interfaceToByte(params.Params)
-	if errPar != nil {
-		return errPar
-	}
-	query, errQuer := interfaceToByte(params.Query)
-	if errQuer != nil {
-		return errQuer
+	// parms, errPar := interfaceToByte(params.Params)
+	// if errPar != nil {
+	// 	return errPar
+	// }
+	// query, errQuer := interfaceToByte(params.Query)
+	// if errQuer != nil {
+	// 	return errQuer
+	// }
+	byt, errByte := json.Marshal(params)
+	if errByte != nil {
+		return errByte
 	}
 	publishing := &amqp.Publishing{
 		ContentType: "application/json",
 		Body:        params.Body,
 		Headers: amqp.Table{
-			"method":   params.Method,
-			"params":   parms,
-			"query":    query,
-			"resource": params.Resource,
-			"status":   params.Status,
-			"type":     params.Type,
+			"params": byt,
 		},
 	}
-	errPubli := rab.publishMessage(routing, c, publishing)
+	errPubli := rab.publishMessage(routing, c, publishing, false)
+	if errPubli != nil {
+		return errPubli
+	}
+	return nil
+}
+
+// RespondMessage ... o mesmo que publish message, mas responde a uma mensagem
+func (rab *Rabbit) RespondMessage(routing string, params *MessageParam) error {
+
+	c, erroCh := rab.getActiveChannel()
+	if erroCh != nil {
+		return erroCh
+	}
+	c.lockChannel()
+	defer c.unLockChannel()
+	// parms, errPar := interfaceToByte(params.Params)
+	// if errPar != nil {
+	// 	return errPar
+	// }
+	// query, errQuer := interfaceToByte(params.Query)
+	// if errQuer != nil {
+	// 	return errQuer
+	// }
+	byt, errByte := json.Marshal(params)
+	if errByte != nil {
+		return errByte
+	}
+	publishing := &amqp.Publishing{
+		ContentType:   "application/json",
+		Body:          params.Body,
+		CorrelationId: params.Args["correlationId"].(string),
+		Headers: amqp.Table{
+			"params": byt,
+		},
+	}
+	errPubli := rab.publishMessage(routing, c, publishing, true)
 	if errPubli != nil {
 		return errPubli
 	}
@@ -187,7 +223,7 @@ func (rab *Rabbit) ReceiveMessage(routing string) (<-chan MessageParam, error) {
 	c.lockChannel()
 	defer c.unLockChannel()
 	msgChan := make(chan MessageParam)
-	msg := MessageParam{}
+	msg := &MessageParam{}
 	delivery, err := c.Channel.Consume(
 		routing, // queue
 		routing, // consumer
@@ -210,28 +246,20 @@ func (rab *Rabbit) ReceiveMessage(routing string) (<-chan MessageParam, error) {
 	}
 	go func() {
 		for d := range delivery {
+
+			errJSON := json.Unmarshal(d.Headers["params"].([]byte), msg)
+			if errJSON != nil {
+				log.Println(errJSON)
+			}
 			msg.Body = d.Body
-			msg.Method = d.Headers["method"].(string)
-
-			params, errParam := byteToInterface(d.Headers["params"].([]byte))
-			if errParam != nil {
-				log.Println(errParam)
-			}
-			msg.Params = params.(map[string]int)
-			query, errQuery := byteToInterface(d.Headers["query"].([]byte))
-			if errQuery != nil {
-				log.Println(errQuery)
-			}
-
-			msg.Query = query.(map[string][]string)
-			msg.Resource = d.Headers["resource"].(string)
-			msg.Status = d.Headers["status"].(int)
-			msg.Type = d.Headers["type"].(string)
+			log.Println("CorrelationId retornado - ", d.CorrelationId)
 			if d.CorrelationId != "" {
+
+				msg.Args = make(map[string]interface{})
 				msg.Args["correlationId"] = d.CorrelationId
 				msg.Args["replyTo"] = d.ReplyTo
 			}
-			msgChan <- msg
+			msgChan <- *msg
 			d.Ack(false)
 		}
 	}()
@@ -258,26 +286,6 @@ func (rab *Rabbit) PublishAndReceiveMessage(routing string, params *MessageParam
 	if errQue != nil {
 		return nil, errQue
 	}
-	corrID := randomString(32)
-	publishing := &amqp.Publishing{
-		ContentType:   "application/json",
-		Body:          params.Body,
-		CorrelationId: corrID,
-		ReplyTo:       q.Name,
-		Headers: amqp.Table{
-			"method":   params.Method,
-			"params":   params.Params,
-			"query":    params.Query,
-			"resource": params.Resource,
-			"status":   params.Status,
-			"type":     params.Type,
-		},
-	}
-	errPubli := rab.publishMessage(routing, c, publishing)
-	if errPubli != nil {
-		return nil, errPubli
-	}
-	msg := MessageParam{}
 	delivery, errDelivery := c.Channel.Consume(
 		q.Name, // queue
 		"",     // consumer
@@ -290,47 +298,77 @@ func (rab *Rabbit) PublishAndReceiveMessage(routing string, params *MessageParam
 	if errDelivery != nil {
 		return nil, errDelivery
 	}
+	corrID := randomString(32)
 
+	byt, errByte := json.Marshal(params)
+	if errByte != nil {
+		return nil, errByte
+	}
+	publishing := &amqp.Publishing{
+		ContentType:   "application/json",
+		Body:          params.Body,
+		CorrelationId: corrID,
+		ReplyTo:       q.Name,
+		Headers: amqp.Table{
+			"params": byt,
+		},
+	}
+
+	errPubli := rab.publishMessage(routing, c, publishing, false)
+	if errPubli != nil {
+		return nil, errPubli
+	}
+	msg := &MessageParam{}
+
+	log.Println("Antes do for")
 	for d := range delivery {
-		msg.Body = d.Body
-		msg.Method = d.Headers["method"].(string)
-		msg.Params = d.Headers["params"].(map[string]int)
-		msg.Query = d.Headers["query"].(map[string][]string)
-		msg.Resource = d.Headers["resource"].(string)
-		msg.Status = d.Headers["status"].(int)
-		msg.Type = d.Headers["type"].(string)
-		if d.CorrelationId != "" {
-			msg.Args["correlationId"] = d.CorrelationId
+		// log.Println("Entrando no for - ", d.CorrelationId == corrID)
+		// log.Println("Entrando no for - ", corrID)
+		log.Println("Mensagem recebida", string(d.Body))
+		if d.CorrelationId == corrID {
+			msg.Body = d.Body
+			errByte := json.Unmarshal(d.Headers["params"].([]byte), msg)
+			if errByte != nil {
+				return nil, errByte
+			}
+
+			msg.Body = d.Body
 			msg.Args["replyTo"] = d.ReplyTo
+			log.Println("Mensagem recebida", string(msg.Body))
+			d.Ack(false)
+
 		}
-
-		d.Ack(false)
+		break
 	}
-	_, errCloseQue := c.Channel.QueueDelete(q.Name, false, false, false)
-	if errCloseQue != nil {
-		log.Println("Não foi possível remover a fila")
-		c.Closed = true
-		go rab.removeCloseChannels()
-	}
-
-	return &msg, nil
+	// _, errCloseQue := c.Channel.QueueDelete(q.Name, false, false, false)
+	// if errCloseQue != nil {
+	// 	log.Println("Não foi possível remover a fila")
+	// 	c.Closed = true
+	// 	go rab.removeCloseChannels()
+	// }
+	log.Println("Mensagem enviada e recebida")
+	return msg, nil
 }
 
-func (rab *Rabbit) publishMessage(routing string, c *Channel, publishing *amqp.Publishing) error {
+func (rab *Rabbit) publishMessage(routing string, c *Channel, publishing *amqp.Publishing, anomQuueu bool) error {
 
 	confirms := c.Channel.NotifyPublish(make(chan amqp.Confirmation, 1))
 	if err := c.Channel.Confirm(false); err != nil {
 		log.Fatalf("confirm.select destination: %s", err)
 	}
 	count := 0
-
+	exName := ""
+	if !anomQuueu {
+		exName = rab.Exchange.name
+	}
+	log.Println("Nome Exchange - ", exName)
 	for {
 
 		errPubli := c.Channel.Publish(
-			rab.Exchange.name, // exchange
-			routing,           // routing key
-			false,             // mandatory
-			false,             // immediate
+			exName,  // exchange
+			routing, // routing key
+			false,   // mandatory
+			false,   // immediate
 			*publishing)
 
 		if errPubli != nil {

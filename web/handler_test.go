@@ -62,7 +62,45 @@ func initializeConfigMessage() *messaging.OptionsMessageCLient {
 //
 // }
 
-func TestSendMessage(t *testing.T) {
+// func TestSendMessage(t *testing.T) {
+//
+// 	handler := initHandler()
+// 	param := &messaging.MessageParam{}
+// 	param.Method = "GET"
+// 	param.Params = map[string]int{
+// 		"escola":  1,
+// 		"unidade": 2,
+// 	}
+// 	param.Resource = "unidade"
+// 	param.Type = "request"
+// 	param.Status = 0
+// 	param.Body = []byte("VICENTE")
+// 	messag := *handler.Messaging
+// 	error := messag.PublishMessage("escola", param)
+// 	if error != nil {
+// 		t.Error("Expected message publishe, got ", error.Error())
+// 	}
+// }
+
+// func TestReceiveMessage(t *testing.T) {
+// 	handler := initHandler()
+// 	messag := *handler.Messaging
+// 	msgChan, errMsg := messag.ReceiveMessage("escola")
+// 	if errMsg != nil {
+// 		log.Println(errMsg)
+// 	}
+// 	msg := &messaging.MessageParam{}
+// 	for m := range msgChan {
+// 		msg = &m
+// 		break
+// 	}
+// 	fmt.Printf("%+v\n", msg)
+// 	if msg == nil {
+// 		t.Error("Expected message exist, got ", nil)
+// 	}
+// }
+
+func TestSendAndReceiveMessage(t *testing.T) {
 	handler := initHandler()
 	param := &messaging.MessageParam{}
 	param.Method = "GET"
@@ -73,9 +111,28 @@ func TestSendMessage(t *testing.T) {
 	param.Resource = "unidade"
 	param.Type = "request"
 	param.Status = 0
+	param.Body = []byte("VICENTE")
 	messag := *handler.Messaging
-	error := messag.PublishMessage("escola", param)
+	msg, errMsg := messag.ReceiveMessage("escola")
+	if errMsg != nil {
+		log.Println("Erro de recebimento - ", errMsg)
+	}
+	go func() {
+		for d := range msg {
+			log.Println("Nome da fila a ser enviada - ", d.Args["replyTo"].(string))
+			log.Println("Mensagem a ser enviada - ", string(d.Body))
+			err := messag.RespondMessage(d.Args["replyTo"].(string), &d)
+			if err != nil {
+				log.Println(err)
+			}
+			log.Println("Respondendo mensagem recebida")
+		}
+	}()
+
+	msgRecebida, error := messag.PublishAndReceiveMessage("escola", param)
+	log.Println("Mensagem Recebida - ", string(msgRecebida.Body))
 	if error != nil {
-		t.Error("Expected message publishe, got ", error.Error())
+
+		t.Error("Expected message publishe, got ", error)
 	}
 }
