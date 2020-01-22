@@ -1,9 +1,16 @@
 package cache
 
+import "time"
+
 // ICacheClient ..
 type ICacheClient interface {
 	connectService(config *OptionsCacheClient) error
-	// GetValues(key string, value *interface{}) error
+	GetValue(key string, value interface{}) error
+	SetValue(key string, value interface{}, expire time.Duration) error
+	DelValue(key string) error
+	DelAll() error
+	AddValues(key string, values interface{}) error
+	GetListValues(key string, values interface{}) error
 }
 
 // OptionsCacheClient ..
