@@ -59,3 +59,16 @@ func TestGetURLFile(t *testing.T) {
 		t.Error("Expect nothing got ", errURL)
 	}
 }
+
+func TestCreateStorage(t *testing.T) {
+	s, errStorage := initStorage()
+
+	if errStorage != nil {
+		t.Error("Expect nothing, got ", errStorage)
+	}
+	storage := *s
+	errBuck := storage.CreateStorage("novobucket")
+	if errBuck != nil {
+		t.Error("Expect nothing got ", errBuck)
+	}
+}

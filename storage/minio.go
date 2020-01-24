@@ -29,7 +29,7 @@ func (m *Minio) connectServiceStorage(o *OptionsConfigStorage) error {
 }
 
 // SaveFileStorage ...
-func (m *Minio) SaveFileStorage(body string, bucket string, path string) (string, error) {
+func (m *Minio) SaveFileStorage(body, bucket, path string) (string, error) {
 	fileB, size, fileType, errFile := base64ToByteFile(body)
 	if size > 100000 {
 		return "", ErrMaxFileSize
@@ -82,6 +82,18 @@ func (m *Minio) GetUrlFile(bucket, path, fileName string) (string, error) {
 	}
 	fmt.Println("Successfully generated presigned URL", presignedURL)
 	return presignedURL.String(), nil
+}
+
+// CreateStorage ...
+func (m *Minio) CreateStorage(bucketName string) error {
+	bucketName = strings.ToLower(bucketName)
+	err := m.Client.MakeBucket(bucketName, "us-east-1")
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	fmt.Println("Successfully created mybucket.")
+	return nil
 }
 
 //

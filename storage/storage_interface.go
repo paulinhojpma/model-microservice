@@ -3,8 +3,9 @@ package storage
 // IStorage ...
 type IStorage interface {
 	connectServiceStorage(o *OptionsConfigStorage) error
-	SaveFileStorage(body string, bucket string, path string) (string, error)
+	SaveFileStorage(body, bucket, path string) (string, error)
 	GetUrlFile(bucket, path, fileName string) (string, error)
+	CreateStorage(bucketName string) error
 }
 
 // OptionsConfigStorage ...
