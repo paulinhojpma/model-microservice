@@ -1,0 +1,10 @@
+{
+  "url": "",
+  "user": "VICENTE",
+  "password": "VICENTERONALDO",
+  "host": "localhost:9000",
+  "driver": "minio",
+  "args": {
+    "bucket": "teste"
+  }
+}
