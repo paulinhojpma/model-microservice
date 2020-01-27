@@ -149,12 +149,12 @@ func (this *DataBase) Open() error {
 		if this.options.Log != nil {
 			this.options.Log.Tracef(traceMsg)
 		}
-		log.Println("111111111")
+
 		erro = this.pool[i].db.Ping()
 		if erro != nil {
 			return errors.New(dataSourceName + "-> " + erro.Error())
 		}
-		log.Println("2222222222")
+
 		traceMsg = fmt.Sprintf("Connected(%d) to the database: %s:%s:%d [OK]", i, this.options.Alias, this.options.IP, this.options.Porta)
 		if this.options.Log != nil {
 			this.options.Log.Tracef(traceMsg)
@@ -166,7 +166,7 @@ func (this *DataBase) Open() error {
 		this.DB.SetMaxOpenConns(this.options.MaxOpen)
 	}
 	this.initMonitorConnIdle()
-	log.Println("333333333")
+
 	return nil
 }
 

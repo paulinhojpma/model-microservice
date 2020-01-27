@@ -4,18 +4,16 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
-	"testing"
 
 	messaging "github.com/sab.io/escola-service/messaging"
-	"github.com/sab.io/escola-service/web"
 )
 
-func initHandler() *web.Handler {
-	handler := &web.Handler{}
-	messaging := configMessage()
-	handler.Messaging = messaging
-	return handler
-}
+// func initHandler() *web.Handler {
+// 	handler := &web.Handler{}
+// 	messaging := configMessage()
+// 	handler.Messaging = messaging
+// 	return handler
+// }
 func configMessage() *messaging.IMessageClient {
 	config := initializeConfigMessage()
 	IMessage, _ := config.ConfiguraFilaMensagens()
@@ -100,39 +98,39 @@ func initializeConfigMessage() *messaging.OptionsMessageCLient {
 // 	}
 // }
 
-func TestSendAndReceiveMessage(t *testing.T) {
-	handler := initHandler()
-	param := &messaging.MessageParam{}
-	param.Method = "GET"
-	param.Params = map[string]int{
-		"escola":  1,
-		"unidade": 2,
-	}
-	param.Resource = "unidade"
-	param.Type = "request"
-	param.Status = 0
-	param.Body = []byte("VICENTE")
-	messag := *handler.Messaging
-	msg, errMsg := messag.ReceiveMessage("escola")
-	if errMsg != nil {
-		log.Println("Erro de recebimento - ", errMsg)
-	}
-	go func() {
-		for d := range msg {
-			log.Println("Nome da fila a ser enviada - ", d.Args["replyTo"].(string))
-			log.Println("Mensagem a ser enviada - ", string(d.Body))
-			err := messag.RespondMessage(d.Args["replyTo"].(string), &d)
-			if err != nil {
-				log.Println(err)
-			}
-			log.Println("Respondendo mensagem recebida")
-		}
-	}()
-
-	msgRecebida, error := messag.PublishAndReceiveMessage("escola", param)
-	log.Println("Mensagem Recebida - ", string(msgRecebida.Body))
-	if error != nil {
-
-		t.Error("Expected message publishe, got ", error)
-	}
-}
+// func TestSendAndReceiveMessage(t *testing.T) {
+// 	handler := initHandler()
+// 	param := &messaging.MessageParam{}
+// 	param.Method = "GET"
+// 	param.Params = map[string]int{
+// 		"escola":  1,
+// 		"unidade": 2,
+// 	}
+// 	param.Resource = "unidade"
+// 	param.Type = "request"
+// 	param.Status = 0
+// 	param.Body = []byte("VICENTE")
+// 	messag := *handler.Messaging
+// 	msg, errMsg := messag.ReceiveMessage("escola")
+// 	if errMsg != nil {
+// 		log.Println("Erro de recebimento - ", errMsg)
+// 	}
+// 	go func() {
+// 		for d := range msg {
+// 			log.Println("Nome da fila a ser enviada - ", d.Args["replyTo"].(string))
+// 			log.Println("Mensagem a ser enviada - ", string(d.Body))
+// 			err := messag.RespondMessage(d.Args["replyTo"].(string), &d)
+// 			if err != nil {
+// 				log.Println(err)
+// 			}
+// 			log.Println("Respondendo mensagem recebida")
+// 		}
+// 	}()
+//
+// 	msgRecebida, error := messag.PublishAndReceiveMessage("escola", param)
+// 	log.Println("Mensagem Recebida - ", string(msgRecebida.Body))
+// 	if error != nil {
+//
+// 		t.Error("Expected message publishe, got ", error)
+// 	}
+// }

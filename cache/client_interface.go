@@ -1,6 +1,9 @@
 package cache
 
-import "time"
+import (
+	"log"
+	"time"
+)
 
 // ICacheClient ..
 type ICacheClient interface {
@@ -24,9 +27,11 @@ type OptionsCacheClient struct {
 
 // ConfiguraCache
 func (o *OptionsCacheClient) ConfiguraCache() (*ICacheClient, error) {
+	log.Println("Entrou no configura cache")
 	var client ICacheClient
 	switch o.Driver {
 	case "redis":
+		log.Println("Configura redis")
 		redis := &Redis{}
 		errRedis := redis.connectService(o)
 		if errRedis != nil {
