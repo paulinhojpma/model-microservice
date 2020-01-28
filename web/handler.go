@@ -3,10 +3,10 @@ package web
 import (
 	"log"
 
-	"github.com/sab.io/escola-service/cache"
-	"github.com/sab.io/escola-service/database"
-	"github.com/sab.io/escola-service/logger"
-	"github.com/sab.io/escola-service/messaging"
+	"sab.io/escola-service/cache"
+	"sab.io/escola-service/database"
+	"sab.io/escola-service/logger"
+	"sab.io/escola-service/messaging"
 )
 
 type Handler struct {

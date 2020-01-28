@@ -1,7 +1,7 @@
 package route
 
 import (
-	"github.com/sab.io/escola-service/messaging"
+	"sab.io/escola-service/messaging"
 )
 
 type Manager struct {

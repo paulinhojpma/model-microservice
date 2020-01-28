@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 
-	messaging "github.com/sab.io/escola-service/messaging"
+	messaging "sab.io/escola-service/messaging"
 )
 
 // func initHandler() *web.Handler {

@@ -1,15 +1,14 @@
 FROM golang:latest
 ENV GO111MODULE=on
 
-
-
-#RUN echo "[url \"git@github.com:\"]\n\tinsteadOf = https://github.com/" >> /root/.gitconfig
-#RUN mkdir /root/.ssh && echo "StrictHostKeyChecking no " > /root/.ssh/config
-ADD . /go/src/github.com/sab.io/escola-service
-#WORKDIR /go/src/github.com/sab.io/escola-service/
-#RUN go get ./...
-
-WORKDIR /go/src/github.com/sab.io/escola-service/cmd/escola-service
-
-RUN go build
+ADD . /sab.io/escola-service
+WORKDIR /sab.io/escola-service/
+#RUN ls
+COPY go.mod .
+COPY go.sum .
+RUN go mod download
+#ENV GO111MODULE=off
+#WORKDIR /go/src/github.com/sab.io/escola-service/cmd/escola-service
+RUN go build sab.io/escola-service/cmd/escola-service
+WORKDIR /sab.io/escola-service/cmd/escola-service
 CMD ["./escola-service"]

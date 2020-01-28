@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	// env "github.com/caarlos0/env"
+
+	env "github.com/caarlos0/env"
 )
 
 var config *Configuracoes
@@ -60,10 +61,10 @@ func NewConfig(file string) *Configuracoes {
 		}
 	}
 
-	// //variaveis de ambiente sobrescrevem informacoes do json
-	// if erro = env.Parse(conf); erro != nil {
-	// 	log.Println(erro)
-	// }
+	//variaveis de ambiente sobrescrevem informacoes do json
+	if erro = env.Parse(conf); erro != nil {
+		log.Println(erro)
+	}
 
 	return conf
 }
