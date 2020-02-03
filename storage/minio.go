@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
 	// "os"
 
 	minio "github.com/minio/minio-go/v6"
@@ -18,7 +19,7 @@ type Minio struct {
 	Bucket string
 }
 
-func (m *Minio) connectServiceStorage(o *OptionsConfigStorage) error {
+func (m Minio) connectServiceStorage(o *OptionsConfigStorage) error {
 	minioClient, err := minio.New(o.Host, o.User, o.Password, false)
 	if err != nil {
 		return err
@@ -29,7 +30,7 @@ func (m *Minio) connectServiceStorage(o *OptionsConfigStorage) error {
 }
 
 // SaveFileStorage ...
-func (m *Minio) SaveFileStorage(body, bucket, path string) (string, error) {
+func (m Minio) SaveFileStorage(body, bucket, path string) (string, error) {
 	fileB, size, fileType, errFile := base64ToByteFile(body)
 	if size > 100000 {
 		return "", ErrMaxFileSize
@@ -69,7 +70,7 @@ func (m *Minio) SaveFileStorage(body, bucket, path string) (string, error) {
 }
 
 // GetUrlFile ...
-func (m *Minio) GetUrlFile(bucket, path, fileName string) (string, error) {
+func (m Minio) GetUrlFile(bucket, path, fileName string) (string, error) {
 	// Set request parameters for content-disposition.
 	reqParams := make(url.Values)
 	reqParams.Set("response-content-disposition", fmt.Sprintf("inline; filename=\"%s\"", fileName))
@@ -85,7 +86,7 @@ func (m *Minio) GetUrlFile(bucket, path, fileName string) (string, error) {
 }
 
 // CreateStorage ...
-func (m *Minio) CreateStorage(bucketName string) error {
+func (m Minio) CreateStorage(bucketName string) error {
 	bucketName = strings.ToLower(bucketName)
 	err := m.Client.MakeBucket(bucketName, "us-east-1")
 	if err != nil {

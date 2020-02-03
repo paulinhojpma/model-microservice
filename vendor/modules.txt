@@ -1,3 +1,5 @@
+# github.com/caarlos0/env v3.5.0+incompatible
+github.com/caarlos0/env
 # github.com/fluent/fluent-logger-golang v1.4.0
 github.com/fluent/fluent-logger-golang/fluent
 # github.com/go-redis/redis/v7 v7.0.0-beta.5

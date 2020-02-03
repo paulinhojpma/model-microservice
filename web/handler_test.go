@@ -1,12 +1,103 @@
-package web_test
+package web
 
 import (
-	"encoding/json"
-	"io/ioutil"
+	"fmt"
 	"log"
+	"testing"
 
-	messaging "sab.io/escola-service/messaging"
+	"sab.io/escola-service/database"
 )
+
+func connectDB() (*database.DataBase, error) {
+	optionDB := &database.OptionsDB{DriverName: "postgres", IP: "tuffi.db.elephantsql.com", Porta: 5432,
+		NomeDB: "rnuhlodj", User: "rnuhlodj", Senha: "adKEd_6EHdT1BV42rL_9FYJdBeCJJfmx", Debug: false, Alias: "rnuhlodj",
+		TamPoolIdleConn: 1, TempoPoolIdleConn: 1, LogMinDuration: 100}
+	// optionDB := &OptionsDB{DriverName: "postgres", IP: "localhost", Porta: 5432,
+	// 	NomeDB: "sabio", User: "postgres", Senha: "postgres", Debug: false, Alias: "postgres",
+	// 	TamPoolIdleConn: 1, TempoPoolIdleConn: 1, LogMinDuration: 100}
+	db := database.NewDB(optionDB)
+
+	if err := db.Open(); err != nil {
+		log.Println("Erro ao conectar no DB. Erro=", err)
+		return nil, err
+	} else {
+		fmt.Printf("Conectado DB OK!.\n")
+	}
+	return db, nil
+}
+
+func initHandler() *Handler {
+	handler := &Handler{}
+	DB, errDB := connectDB()
+	if errDB != nil {
+		log.Println(errDB)
+	}
+	handler.DB = DB
+	return handler
+}
+
+// func TestCadastrarEscola(t *testing.T) {
+// 	handler := initHandler()
+// 	unidades := make([]*Unidade, 0)
+// 	unidade := &Unidade{
+// 		Nome: "Unidade Bancários",
+// 		Endereco: &Endereco{
+// 			Logradouro:  "Rua José Firmino Ferreira",
+// 			Numero:      "767",
+// 			Bairro:      "Agua Fria",
+// 			Complemento: "Apt 303 bl A",
+// 			UF:          "PB",
+// 			Cidade:      "João Pessoa",
+// 			Cep:         "58053222",
+// 		},
+// 	}
+// 	unidades = append(unidades, unidade)
+// 	escola := &Escola{
+// 		Nome:     "Nova Escola",
+// 		Cnpj:     "83164077000124",
+// 		Unidades: unidades,
+// 	}
+// 	log.Println("Unidade inserida - ", escola.Unidades[0])
+// 	log.Println("Endereco inserida - ", escola.Unidades[0].Endereco.Logradouro)
+// 	errCad := escola.CadastrarEscola(handler, nil)
+// 	if errCad != nil {
+// 		log.Println(errCad)
+// 	}
+// 	if escola.IDEscola == 0 {
+// 		t.Error("Expecting id greater than 0 got id -", escola.IDEscola)
+// 	}
+//
+// }
+// func TestGetEscolas(t *testing.T) {
+// 	handler := initHandler()
+//
+// 	escolas, errEscolas := GetEscolas(handler)
+// 	for _, escola := range escolas {
+// 		log.Printf("%+v", escola)
+// 		if escola.Unidades != nil {
+// 			for _, unidade := range escola.Unidades {
+// 				log.Printf("%+v", unidade)
+// 			}
+// 		}
+// 	}
+//
+// 	if errEscolas != nil {
+// 		t.Error("Expect nothing, got ", errEscolas)
+// 	}
+//
+// }
+
+func TestGetEscola(t *testing.T) {
+	handler := initHandler()
+
+	escola, errEscolas := GetEscola(handler, 16)
+	log.Printf("%+v", escola)
+	log.Printf("%+v", escola.Unidades[0])
+
+	if errEscolas != nil {
+		t.Error("Expect nothing, got ", errEscolas)
+	}
+}
 
 // func initHandler() *web.Handler {
 // 	handler := &web.Handler{}
@@ -14,32 +105,32 @@ import (
 // 	handler.Messaging = messaging
 // 	return handler
 // }
-func configMessage() *messaging.IMessageClient {
-	config := initializeConfigMessage()
-	IMessage, _ := config.ConfiguraFilaMensagens()
-
-	return IMessage
-}
-func initializeConfigMessage() *messaging.OptionsMessageCLient {
-	iMessage := &messaging.OptionsMessageCLient{}
-
-	dat, err := ioutil.ReadFile("../config-msgs.json")
-
-	if err != nil {
-		log.Println(err)
-		return nil
-	}
-	log.Println(string(dat))
-	errJSON := json.Unmarshal(dat, iMessage)
-	if errJSON != nil {
-		log.Println(errJSON)
-		return nil
-	}
-	log.Println(iMessage.Args)
-	//iMessage.ConfiguraFilaMensagens
-	return iMessage
-
-}
+// func configMessage() *messaging.IMessageClient {
+// 	config := initializeConfigMessage()
+// 	IMessage, _ := config.ConfiguraFilaMensagens()
+//
+// 	return IMessage
+// }
+// func initializeConfigMessage() *messaging.OptionsMessageCLient {
+// 	iMessage := &messaging.OptionsMessageCLient{}
+//
+// 	dat, err := ioutil.ReadFile("../config-msgs.json")
+//
+// 	if err != nil {
+// 		log.Println(err)
+// 		return nil
+// 	}
+// 	log.Println(string(dat))
+// 	errJSON := json.Unmarshal(dat, iMessage)
+// 	if errJSON != nil {
+// 		log.Println(errJSON)
+// 		return nil
+// 	}
+// 	log.Println(iMessage.Args)
+// 	//iMessage.ConfiguraFilaMensagens
+// 	return iMessage
+//
+// }
 
 // func TestConfigMessage(t *testing.T) {
 // 	config := initializeConfigMessage()

@@ -29,7 +29,6 @@ func (o *OptionsConfigLogger) ConfiguraLogger() (*ILogger, error) {
 			return nil, errFluentd
 		}
 		client = fluentd
-
 	}
 	return &client, nil
 }

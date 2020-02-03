@@ -13,6 +13,7 @@ import (
 )
 
 func main() {
+	// time.Sleep(time.Second * 15)
 	configNew := config.Config()
 	stage := os.Getenv("stage")
 	if stage == "" {
@@ -21,7 +22,7 @@ func main() {
 		configNew = config.NewConfig("")
 	}
 	handler := &web.Handler{}
-	log.Println(handler)
+	// log.Println(handler)
 	// // iniciando o cache do redis
 	// configCache := cache.OptionsCacheClient{
 	// 	Host:     configNew.RedisHost,
@@ -74,21 +75,35 @@ func main() {
 	//inicializando serviço de messaging
 	configMessage := &messaging.OptionsMessageCLient{}
 
-	dat, err := ioutil.ReadFile(configNew.Messaging)
-	if err != nil {
-		log.Println(err)
+	dat, errRe := ioutil.ReadFile(configNew.Messaging)
+	if errRe != nil {
+		log.Println(errRe)
 
 	}
 	errJSON := json.Unmarshal(dat, configMessage)
 	if errJSON != nil {
 		log.Println(errJSON)
 	}
+	log.Println(configMessage.URL)
+	imessa, errM := configMessage.ConfiguraFilaMensagens()
 
-	imessa, error := configMessage.ConfiguraFilaMensagens()
-	if error != nil {
-		log.Println(error)
+	if errM != nil {
+		log.Println("Erro ao conectar na fila de mensagens - ", errM)
+		log.Println("Antes do for")
+		// for {
+		//
+		// 	time.Sleep(time.Second * 5)
+		// 	imessa, errM = configMessage.ConfiguraFilaMensagens()
+		// 	log.Println(errM)
+		// 	if errM == nil {
+		// 		break
+		// 	}
+		// }
+
 	}
+
 	log.Println("Conectado ao serviço de menssagens")
+	log.Println("VAI CARAI")
 	messa := *imessa
 	handler.Message = messa
 	msgChan, errMsg := handler.Message.ReceiveMessage("escola")

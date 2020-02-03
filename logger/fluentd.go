@@ -22,11 +22,12 @@ type Fluentd struct {
 	Service string
 }
 
-func (f *Fluentd) connectServiceLogger(o *OptionsConfigLogger) error {
+func (f Fluentd) connectServiceLogger(o *OptionsConfigLogger) error {
 	config := fluent.Config{
 		FluentPort: o.Port,
 		FluentHost: o.Host,
 	}
+	log.Println("Host - ", config.FluentHost)
 	logger, errLogger := fluent.New(config)
 	if errLogger != nil {
 		return errLogger
@@ -37,7 +38,7 @@ func (f *Fluentd) connectServiceLogger(o *OptionsConfigLogger) error {
 }
 
 // Send ...
-func (f *Fluentd) Send(tyype string, msg string, idOperation string) {
+func (f Fluentd) Send(tyype string, msg string, idOperation string) {
 	go func() {
 		t := time.Now()
 		data := LoggerData{

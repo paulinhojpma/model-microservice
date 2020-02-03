@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
-	"testing"
 )
 
 func initStorage() (*IStorage, error) {
@@ -46,29 +45,29 @@ func initStorage() (*IStorage, error) {
 // 		t.Error("Expect nothing, got ", errSave)
 // 	}
 // }
-
-func TestGetURLFile(t *testing.T) {
-	s, errStorage := initStorage()
-	if errStorage != nil {
-		t.Error("Expect nothing, got ", errStorage)
-	}
-	storage := *s
-	urls, errURL := storage.GetUrlFile("teste", "vicente.pdf", "ronaldo.pdf")
-	log.Println("URL retornada - ", urls)
-	if errURL != nil {
-		t.Error("Expect nothing got ", errURL)
-	}
-}
-
-func TestCreateStorage(t *testing.T) {
-	s, errStorage := initStorage()
-
-	if errStorage != nil {
-		t.Error("Expect nothing, got ", errStorage)
-	}
-	storage := *s
-	errBuck := storage.CreateStorage("novobucket")
-	if errBuck != nil {
-		t.Error("Expect nothing got ", errBuck)
-	}
-}
+//
+// func TestGetURLFile(t *testing.T) {
+// 	s, errStorage := initStorage()
+// 	if errStorage != nil {
+// 		t.Error("Expect nothing, got ", errStorage)
+// 	}
+// 	storage := *s
+// 	urls, errURL := storage.GetUrlFile("teste", "vicente.pdf", "ronaldo.pdf")
+// 	log.Println("URL retornada - ", urls)
+// 	if errURL != nil {
+// 		t.Error("Expect nothing got ", errURL)
+// 	}
+// }
+//
+// func TestCreateStorage(t *testing.T) {
+// 	s, errStorage := initStorage()
+//
+// 	if errStorage != nil {
+// 		t.Error("Expect nothing, got ", errStorage)
+// 	}
+// 	storage := *s
+// 	errBuck := storage.CreateStorage("novobucket")
+// 	if errBuck != nil {
+// 		t.Error("Expect nothing got ", errBuck)
+// 	}
+// }

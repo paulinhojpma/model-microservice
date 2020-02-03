@@ -1,6 +1,5 @@
 {
-  "URL": "amqp://guest:guest@172.17.0.1:5672/",
-  "driver": "rabbitMQ",
+  
   "args": {
     "exchange": {
       "autoDelete": false,

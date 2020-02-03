@@ -15,7 +15,7 @@ type Redis struct {
 	Client *redis.Client
 }
 
-func (r *Redis) connectService(config *OptionsCacheClient) error {
+func (r Redis) connectService(config *OptionsCacheClient) error {
 	clientRedis := redis.NewClient(&redis.Options{
 		Addr:     config.Host,
 		Password: config.Password,
@@ -35,7 +35,7 @@ func (r *Redis) connectService(config *OptionsCacheClient) error {
 }
 
 // GetValue ...
-func (r *Redis) GetValue(key string, value interface{}) error {
+func (r Redis) GetValue(key string, value interface{}) error {
 	log.Println("---------Pegar objeto redis-------")
 	if r.Client == nil {
 		log.Println("Client redis nil")
@@ -59,7 +59,7 @@ func (r *Redis) GetValue(key string, value interface{}) error {
 }
 
 // SetValue ...
-func (r *Redis) SetValue(key string, value interface{}, expire time.Duration) error {
+func (r Redis) SetValue(key string, value interface{}, expire time.Duration) error {
 	if r.Client == nil {
 		log.Println("Client redis nil")
 		return errors.New("client Redis inoperante")
@@ -76,7 +76,7 @@ func (r *Redis) SetValue(key string, value interface{}, expire time.Duration) er
 }
 
 // DelValue ...
-func (r *Redis) DelValue(key string) error {
+func (r Redis) DelValue(key string) error {
 	if r.Client == nil {
 		log.Println("Client redis nil")
 		return errors.New("client Redis inoperante")
@@ -89,7 +89,7 @@ func (r *Redis) DelValue(key string) error {
 }
 
 // DelAll ...
-func (r *Redis) DelAll() error {
+func (r Redis) DelAll() error {
 	if r.Client == nil {
 		log.Println("Client redis nil")
 		return errors.New("client Redis inoperante")
@@ -102,7 +102,7 @@ func (r *Redis) DelAll() error {
 }
 
 // AddValues ...
-func (r *Redis) AddValues(key string, values interface{}) error {
+func (r Redis) AddValues(key string, values interface{}) error {
 	if r.Client == nil {
 		log.Println("Client redis nil")
 		return errors.New("client Redis inoperante")
@@ -138,7 +138,7 @@ func (r *Redis) AddValues(key string, values interface{}) error {
 	return nil
 }
 
-func (r *Redis) GetListValues(key string, values interface{}) error {
+func (r Redis) GetListValues(key string, values interface{}) error {
 	if r.Client == nil {
 		log.Println("Client redis nil")
 		return errors.New("client Redis inoperante")

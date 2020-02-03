@@ -11,6 +11,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+
 	//_ "github.com/marssis/gopgsqldriver"
 	//driver postgres pure Go
 	_ "github.com/lib/pq"
@@ -147,7 +148,8 @@ func (this *DataBase) Open() error {
 		traceMsg = fmt.Sprintf("Connecting(%d) to the database: %s:%s:%d...", i, this.options.Alias, this.options.IP, this.options.Porta)
 		log.Println(traceMsg)
 		if this.options.Log != nil {
-			this.options.Log.Tracef(traceMsg)
+			// this.options.Log.Tracef(traceMsg)
+			log.Println(traceMsg)
 		}
 
 		erro = this.pool[i].db.Ping()
@@ -157,7 +159,8 @@ func (this *DataBase) Open() error {
 
 		traceMsg = fmt.Sprintf("Connected(%d) to the database: %s:%s:%d [OK]", i, this.options.Alias, this.options.IP, this.options.Porta)
 		if this.options.Log != nil {
-			this.options.Log.Tracef(traceMsg)
+			// this.options.Log.Tracef(traceMsg)
+			log.Println(traceMsg)
 		}
 	}
 
@@ -280,7 +283,8 @@ func (this *DataBase) StartTransaction() (*Transaction, error) {
 		return nil, erro
 	}
 
-	this.options.Log.Tracef("Begin")
+	// this.options.Log.Tracef("Begin")
+	log.Println("Begin")
 	return &Transaction{db: this, tx: tx, closed: false, indicePool: i}, nil
 }
 
@@ -710,7 +714,10 @@ func (this *Transaction) Commit() error {
 		this.db.liberarConnPool(this.indicePool)
 		this.closed = true
 		erro := this.tx.Commit()
-		this.db.options.Log.Tracef("commit - %v", erro)
+		// this.db.options.Log.Tracef("commit - %v", erro)
+		if erro != nil {
+			log.Printf("rollback - %v", erro)
+		}
 		return erro
 	}
 
@@ -722,7 +729,8 @@ func (this *Transaction) Rollback() error {
 	if !this.closed {
 		this.closed = true
 		erro := this.tx.Rollback()
-		this.db.options.Log.Tracef("rollback - %v", erro)
+		// this.db.options.Log.Tracef("rollback - %v", erro)
+		log.Printf("rollback - %v", erro)
 		this.db.SetMaxIdleConns(0) //forçar desconexão
 		this.db.liberarConnPool(this.indicePool)
 		return erro

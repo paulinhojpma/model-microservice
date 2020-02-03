@@ -37,6 +37,7 @@ func (o *OptionsCacheClient) ConfiguraCache() (*ICacheClient, error) {
 		if errRedis != nil {
 			return nil, errRedis
 		}
+
 		client = redis
 
 	}
