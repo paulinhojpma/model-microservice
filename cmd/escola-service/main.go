@@ -75,7 +75,7 @@ func main() {
 	//inicializando serviço de messaging
 	configMessage := &messaging.OptionsMessageCLient{}
 
-	dat, errRe := ioutil.ReadFile(configNew.Messaging)
+	dat, errRe := ioutil.ReadFile(configNew.MessagingURL)
 	if errRe != nil {
 		log.Println(errRe)
 
@@ -105,8 +105,8 @@ func main() {
 	log.Println("Conectado ao serviço de menssagens")
 	log.Println("VAI CARAI")
 	messa := *imessa
-	handler.Message = messa
-	msgChan, errMsg := handler.Message.ReceiveMessage("escola")
+	handler.Message = imessa
+	msgChan, errMsg := messa.ReceiveMessage("escola")
 	if errMsg != nil {
 		log.Println(errMsg)
 	}
