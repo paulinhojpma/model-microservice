@@ -2,9 +2,18 @@ package web
 
 //  Disciplina ...
 type Disciplina struct {
-	IDDisciplina int    `json:"idDisciplina"`
-	Nome         string `json:"nome"`
-	CargaHorario int    `json:"cargaHorario"`
+	IDDisciplina int      `json:"idDisciplina"`
+	Nome         string   `json:"nome"`
+	CargaHorario int      `json:"cargaHorario"`
+	Ementa       string   `json:"ementa"`
+	Descricao    string   `json:"descricao"`
+	Serie        []*Serie `json:"series"`
+}
+
+type Serie struct {
+	IDSerie int    `json:"idSerie"`
+	Tipo    string `json:"tipo"`
+	Nome    string `json:"nome"`
 }
 
 // Matricula ...

@@ -3,7 +3,6 @@ package web
 import (
 	"fmt"
 	"log"
-	"testing"
 
 	"sab.io/escola-service/database"
 )
@@ -87,17 +86,17 @@ func initHandler() *Handler {
 //
 // }
 
-func TestGetEscola(t *testing.T) {
-	handler := initHandler()
-
-	escola, errEscolas := GetEscola(handler, 16)
-	log.Printf("%+v", escola)
-	log.Printf("%+v", escola.Unidades[0])
-
-	if errEscolas != nil {
-		t.Error("Expect nothing, got ", errEscolas)
-	}
-}
+// func TestGetEscola(t *testing.T) {
+// 	handler := initHandler()
+//
+// 	escola, errEscolas := GetEscola(handler, 16)
+// 	log.Printf("%+v", escola)
+// 	log.Printf("%+v", escola.Unidades[0])
+//
+// 	if errEscolas != nil {
+// 		t.Error("Expect nothing, got ", errEscolas)
+// 	}
+// }
 
 // func initHandler() *web.Handler {
 // 	handler := &web.Handler{}

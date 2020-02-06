@@ -78,6 +78,7 @@ func (e *Escola) CadastrarEscola(h *Handler, transDB *database.Transaction) erro
 		"nome": e.Nome,
 		"cnpj": e.Cnpj,
 	}
+
 	IDEscola, errInsertEscola := transDB.SelectSliceScan(database.SQLInsertEscola, argMap)
 	if errInsertEscola != nil {
 		erroTransDB = errInsertEscola
