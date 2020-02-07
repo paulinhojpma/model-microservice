@@ -19,6 +19,7 @@ type Disciplina struct {
 type Ementa struct {
 	Ementa       string `json:"ementa"`
 	IDEmenta     int    `json:"idEmenta"`
+	Ativo        bool   `json:"ativo"`
 	CargaHoraria int    `json:"cargaHoraria"`
 	Serie        *Serie `json:"serie"`
 }
@@ -178,18 +179,23 @@ func (d *Disciplina) AtualizarDisciplina(h *Handler, idEscola int, transDB *data
 	}
 
 	argMap := map[string]interface{}{
-		"nome":      d.Nome,
-		"descricao": d.Descricao,
-		"id_escola": idEscola,
+		"nome":          d.Nome,
+		"descricao":     d.Descricao,
+		"id_escola":     idEscola,
+		"id_disciplina": d.IDDisciplina,
 	}
 
-	rowIdDisciplina, errInsertDisciplina := transDB.SelectSliceScan(database.SQLInsertDisciplina, argMap)
+	rowIdDisciplina, errInsertDisciplina := transDB.SelectSliceScan(database.SQLUpdateDisciplina, argMap)
 	if errInsertDisciplina != nil {
 		erroTransDB = errInsertDisciplina
 		return errInsertDisciplina
 	}
 
-	d.IDDisciplina = rowNilInt(rowIdDisciplina[0], 0)
+	idDisciplina := rowNilInt(rowIdDisciplina[0], 0)
+	if idDisciplina == 0 {
+		erroTransDB = ErrorAtualizar
+		return ErrorAtualizar
+	}
 	if len(d.Ementas) != 0 {
 		for _, e := range d.Ementas {
 			errEm := e.cadastrarEmenta(h, d.IDDisciplina, transDB)
@@ -209,6 +215,7 @@ func (e *Ementa) cadastrarEmenta(h *Handler, idDisciplina int, transDB *database
 		"ementa":        e.Ementa,
 		"id_serie":      e.Serie.IDSerie,
 		"id_disciplina": idDisciplina,
+		"ativo":         e.Ativo,
 	}
 
 	rowIdEmenta, errInsertEmenta := transDB.SelectSliceScan(database.SQLInsertEmenta, argMap)

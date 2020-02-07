@@ -1,8 +1,10 @@
 package web
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
+	"testing"
 
 	"sab.io/escola-service/database"
 )
@@ -314,3 +316,58 @@ func initHandler() *Handler {
 // 		t.Error("Expecting nothing got ", errDisciplina)
 // 	}
 // }
+
+func TestAtualizaDisciplina(t *testing.T) {
+	handler := initHandler()
+	sDisciplina := `{
+	"idDisciplina": 5,
+   "nome":"Português",
+   "descricao":"Disciplina de português instrumental",
+   "ementas":[
+      {
+		 
+         "ementa":"Morfologia das palavras",
+		 "cargaHoraria":4,
+		 "ativo" : true,
+         "serie":{
+            "idSerie":1,
+            "nome":"1",
+            "tipo":"ENSINO MEDIO"
+         }
+      },
+      {
+
+         "ementa":"Sintaxe",
+		 "cargaHoraria":2,
+		 "ativo" : true,
+         "serie":{
+            "idSerie":2,
+            "nome":"2",
+            "tipo":"ENSINO MEDIO"
+         }
+      },
+      {
+
+         "ementa":"Semantica",
+		 "cargaHoraria":5,
+		 "ativo" : true,
+         "serie":{
+            "idSerie":3,
+            "nome":"3",
+            "tipo":"ENSINO MEDIO"
+         }
+      }
+   ]
+}`
+
+	disciplina := &Disciplina{}
+	errJSON := json.Unmarshal([]byte(sDisciplina), disciplina)
+	if errJSON != nil {
+		log.Println(errJSON)
+	}
+	errDisciplina := disciplina.AtualizarDisciplina(handler, 16, nil)
+	log.Println("ID disciplina ", disciplina.IDDisciplina)
+	if errDisciplina != nil {
+		t.Error("Expecting nothing got ", errDisciplina)
+	}
+}

@@ -99,7 +99,11 @@ const (
 	SQLInsertEndereco = `INSERT INTO public.endereco( logradouro, bairro, cidade, uf, cep, numero, complemento)
 	VALUES ( '%(logradouro)s', '%(bairro)s', '%(cidade)s', '%(uf)s', '%(cep)s', '%(numero)s', '%(complemento)s') returning id_endereco;`
 	SQLInsertDisciplina = `INSERT INTO escola.disciplina( id_escola, nome, descricao)	VALUES (%(id_escola)d, '%(nome)s', '%(descricao)s') returning id_disciplina;`
-	SQLInsertEmenta     = `INSERT INTO escola.serie_disciplina(id_serie, id_disciplina, carga_horaria, ementa)	VALUES ( %(id_serie)d, %(id_disciplina)d, %(carga_horaria)d, '%(ementa)s') returning id_serie_disciplina;`
+	SQLInsertEmenta     = `INSERT INTO escola.serie_disciplina(id_serie, id_disciplina, carga_horaria, ementa)	
+							VALUES ( %(id_serie)d, %(id_disciplina)d, %(carga_horaria)d, '%(ementa)s') 
+							ON CONFLICT ON CONSTRAINT unique_serie_disciplina 
+							DO UPDATE SET  carga_horaria =  %(carga_horaria)d, ementa = '%(ementa)s', ativo= %(ativo)t 
+							returning id_serie_disciplina;`
 
 	// UPDATES
 	SQLUpdateDisciplina = `UPDATE escola.disciplina
