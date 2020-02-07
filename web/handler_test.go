@@ -17,7 +17,7 @@ func connectDB() (*database.DataBase, error) {
 	db := database.NewDB(optionDB)
 
 	if err := db.Open(); err != nil {
-		log.Println("Erro ao conectar no DB. Erro=", err)
+		log.Println("Erro ao conectar no DB. Erro =", err)
 		return nil, err
 	} else {
 		fmt.Printf("Conectado DB OK!.\n")
@@ -222,5 +222,95 @@ func initHandler() *Handler {
 // 	if error != nil {
 //
 // 		t.Error("Expected message publishe, got ", error)
+// 	}
+// }
+
+// func TestGetDisciplinas(t *testing.T) {
+// 	handler := initHandler()
+//
+// 	disciplinas, errDisciplinas := GetDisciplinas(handler, 16)
+// 	if disciplinas != nil {
+// 		for _, disciplina := range disciplinas {
+// 			fmt.Printf("%+v\n", disciplina)
+// 			for _, serie := range disciplina.Ementas {
+// 				fmt.Printf("%+v\n", serie)
+// 				fmt.Printf("%+v\n", serie.Serie)
+// 			}
+// 		}
+// 	}
+// 	if errDisciplinas != nil {
+// 		t.Error("expecting nothing got, ", errDisciplinas)
+// 	}
+//
+// }
+
+// func TestGetDisciplinaByID(t *testing.T) {
+// 	handler := initHandler()
+//
+// 	disciplina, errDisciplinas := GetDisciplinaByID(handler, 16, 1)
+//
+// 	if disciplina != nil {
+// 		fmt.Printf("%+v\n", disciplina)
+// 		for _, serie := range disciplina.Ementas {
+// 			fmt.Printf("%+v\n", serie)
+// 			fmt.Printf("%+v\n", serie.Serie)
+// 		}
+// 	}
+//
+// 	if errDisciplinas != nil {
+// 		t.Error("expecting nothing got, ", errDisciplinas)
+// 	}
+//
+// }
+
+// func TestCadastrarDisciplina(t *testing.T) {
+// 	handler := initHandler()
+// 	sDisciplina := `{
+//
+//    "nome":"Português",
+//    "descricao":"Disciplina de português",
+//    "ementas":[
+//       {
+//
+//          "ementa":"Morfologia",
+//          "cargaHoraria":4,
+//          "serie":{
+//             "idSerie":1,
+//             "nome":"1",
+//             "tipo":"ENSINO MEDIO"
+//          }
+//       },
+//       {
+//
+//          "ementa":"Sintaxe",
+//          "cargaHoraria":3,
+//          "serie":{
+//             "idSerie":2,
+//             "nome":"2",
+//             "tipo":"ENSINO MEDIO"
+//          }
+//       },
+//       {
+//
+//          "ementa":"Semantica",
+//          "cargaHoraria":6,
+//          "serie":{
+//             "idSerie":3,
+//             "nome":"3",
+//             "tipo":"ENSINO MEDIO"
+//          }
+//       }
+//    ]
+// }`
+//
+// 	disciplina := &Disciplina{}
+// 	errJSON := json.Unmarshal([]byte(sDisciplina), disciplina)
+// 	if errJSON != nil {
+// 		log.Println(errJSON)
+// 	}
+// 	errDisciplina := disciplina.CadastrarDisciplina(handler, 16, nil)
+// 	log.Println("ID disciplina ", disciplina.IDDisciplina)
+// 	if errDisciplina != nil {
+// 		t.Error("Expecting nothing got ", errDisciplina)
 // 	}
 // }
