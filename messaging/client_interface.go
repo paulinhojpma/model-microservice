@@ -4,6 +4,13 @@ import (
 	"encoding/json"
 )
 
+const (
+	TYPE_REQUEST  = "request"
+	TYPE_RESPONSE = "response"
+	TYPE_ERROR    = "error"
+	TYPE_INFO     = "info"
+)
+
 //IMessageClient ...
 type IMessageClient interface {
 	connectService(config *OptionsMessageCLient) error
@@ -25,14 +32,16 @@ type OptionsMessageCLient struct {
 
 //MessageParam ...
 type MessageParam struct {
-	Method   string              `json:"method"`
-	Query    map[string][]string `json:"query"`
-	Params   map[string]int      `json:"params"`
-	Resource string              `json:"resource"`
-	Type     string              `json:"type"`
-	Status   int                 `json:"status"`
-	Body     []byte
-	Args     map[string]interface{} `json:"args"`
+	Method      string              `json:"method"`
+	Query       map[string][]string `json:"query"`
+	Params      map[string]int      `json:"params"`
+	Resource    string              `json:"resource"`
+	Type        string              `json:"type"`
+	Status      int                 `json:"status"`
+	IDOperation string              `json:"idOperation"`
+	Info        string              `json:"info"`
+	Body        []byte
+	Args        map[string]interface{} `json:"args"`
 }
 
 //ConfiguraFilaMensagens checa qual a aplicação da fila de mensagens e faz as configuração a partir dele

@@ -1,24 +1,60 @@
 {
 
-  "args": {
-    "exchange": {
-      "autoDelete": false,
-      "name": "api",
-      "durable": true,
-      "internal": false,
-      "noWait": false
-    },
-    "queues": [
+  "args": {  
+    "exchanges":[
+     {
+          "autoDelete": false,
+          "name": "api",
+          "durable": true,
+          "internal": false,
+          "noWait": false,
+          "queues": [
+            {
+              "name": "escola",
+              "durable": true,
+              "autoDelete": false,
+              "exclusive": false,
+              "noWait": false,
+              "bindingKeys": [
+                "escola",
+                "unidade",
+                "disciplina"
+              ]
+            },
+            {
+              "name": "turma",
+              "durable": true,
+              "autoDelete": false,
+              "exclusive": false,
+              "noWait": false,
+              "bindingKeys": [
+                "turma"                
+              ]
+            }
+          ]
+      },
       {
-        "name": "escola",
-        "durable": true,
         "autoDelete": false,
-        "exclusive": false,
+        "name": "client",
+        "durable": true,
+        "internal": false,
         "noWait": false,
-        "bindingKeys": [
-          "escola",
+        "queues": [
+          {
+            "name": "gateway",
+            "durable": true,
+            "autoDelete": false,
+            "exclusive": false,
+            "noWait": false,
+            "bindingKeys": [
+              "client"             
+            ]
+          }
         ]
-      }
-    ]
+      }    
+    
+    ] 
+    
+    
   }
 }

@@ -24,8 +24,7 @@ const (
 type Rabbit struct {
 	Connection *amqp.Connection
 	Channels   []*Channel
-	Exchange   *Exchange `json:"exchange"`
-	routings   map[string]string
+	Exchanges  []*Exchange `json:"exchanges"`
 }
 
 //Channel canal de uma connexão e o status
@@ -86,15 +85,12 @@ func (rab Rabbit) connectService(config *OptionsMessageCLient) error {
 		return errChannel
 	}
 	//declara os parametros uma exchange exchange com os parametros inseridos
-	exchange, errExc := channel.configToExchange(config.Args["exchange"].(map[string]interface{}))
+	exchanges, errExc := channel.configToExchange(config.Args["exchanges"].([]interface{}))
 	if errExc != nil {
 		return errExc
 	}
-	rab.Exchange = exchange
-	errQueue := channel.configToQueues(config.Args["queues"].([]interface{}), exchange)
-	if errQueue != nil {
-		return errQueue
-	}
+	rab.Exchanges = exchanges
+
 	return nil
 }
 
@@ -367,7 +363,11 @@ func (rab Rabbit) publishMessage(routing string, c *Channel, publishing *amqp.Pu
 	count := 0
 	exName := ""
 	if !anomQuueu {
-		exName = rab.Exchange.name
+		exchange := rab.findExchangeByRoute(routing)
+		if exchange == nil {
+			return errors.New("Não existe exchange para essa rota")
+		}
+		exName = exchange.name
 	}
 	log.Println("Nome Exchange - ", exName)
 	for {
@@ -398,51 +398,61 @@ func (rab Rabbit) publishMessage(routing string, c *Channel, publishing *amqp.Pu
 	}
 
 }
-func (c *Channel) configToExchange(exc map[string]interface{}) (*Exchange, error) {
-	exchange := &Exchange{}
+func (c *Channel) configToExchange(exc []interface{}) ([]*Exchange, error) {
 
-	if exc["autoDelete"] == nil {
-		return nil, errors.New("Valor de configuração 'autoDelete' vazio")
-	}
-	if exc["durable"] == nil {
-		return nil, errors.New("Valor de configuração 'durable' vazio")
-	}
-	if exc["internal"] == nil {
-		return nil, errors.New("Valor de configuração 'internal' vazio")
-	}
-	// if exc["kind"] == nil {
-	// 	return nil, errors.New("Valor de configuração 'kind' vazio")
-	// }
-	if exc["name"] == nil {
-		return nil, errors.New("Valor de configuração 'name' vazio")
-	}
-	if exc["noWait"] == nil {
-		return nil, errors.New("Valor de configuração 'noWait' vazio")
+	exchanges := make([]*Exchange, len(exc))
+	for i, exInt := range exc {
+		exchange := &Exchange{}
+		ex := exInt.(map[string]interface{})
+		if ex["autoDelete"] == nil {
+			return nil, errors.New("Valor de configuração 'autoDelete' vazio")
+		}
+		if ex["durable"] == nil {
+			return nil, errors.New("Valor de configuração 'durable' vazio")
+		}
+		if ex["internal"] == nil {
+			return nil, errors.New("Valor de configuração 'internal' vazio")
+		}
+		// if exc["kind"] == nil {
+		// 	return nil, errors.New("Valor de configuração 'kind' vazio")
+		// }
+		if ex["name"] == nil {
+			return nil, errors.New("Valor de configuração 'name' vazio")
+		}
+		if ex["noWait"] == nil {
+			return nil, errors.New("Valor de configuração 'noWait' vazio")
+		}
+
+		exchange.autoDelete = ex["autoDelete"].(bool)
+		exchange.durable = ex["durable"].(bool)
+		exchange.internal = ex["internal"].(bool)
+		// exchange.kind = exc["kind"].(string)
+		exchange.name = ex["name"].(string)
+		exchange.noWait = ex["noWait"].(bool)
+		errChannel := c.Channel.ExchangeDeclare(
+			exchange.name,       // name
+			"direct",            // type
+			exchange.durable,    // durable
+			exchange.autoDelete, // auto-deleted
+			exchange.internal,   // internal
+			exchange.noWait,     // no-wait
+			nil,                 // arguments
+		)
+		if errChannel != nil {
+			return nil, errChannel
+		}
+		errQueue := c.configToQueues(ex["queues"].([]interface{}), exchange)
+		if errQueue != nil {
+			return nil, errQueue
+		}
+		exchanges[i] = exchange
 	}
 
-	exchange.autoDelete = exc["autoDelete"].(bool)
-	exchange.durable = exc["durable"].(bool)
-	exchange.internal = exc["internal"].(bool)
-	// exchange.kind = exc["kind"].(string)
-	exchange.name = exc["name"].(string)
-	exchange.noWait = exc["noWait"].(bool)
-	errChannel := c.Channel.ExchangeDeclare(
-		exchange.name,       // name
-		"direct",            // type
-		exchange.durable,    // durable
-		exchange.autoDelete, // auto-deleted
-		exchange.internal,   // internal
-		exchange.noWait,     // no-wait
-		nil,                 // arguments
-	)
-	if errChannel != nil {
-		return nil, errChannel
-	}
 	// err := json.Unmarshal(exc, exchange)
 	// if err != nil {
 	// 	return nil, err
 	// }
-	return exchange, nil
+	return exchanges, nil
 }
 
 //configToQueues declara as queues e associa a uma exchange com uma bidingQueue
@@ -505,4 +515,17 @@ func (rab Rabbit) removeCloseChannels() {
 			rab.Channels[i] = nil
 		}
 	}
+}
+
+func (rab Rabbit) findExchangeByRoute(routing string) *Exchange {
+	for _, exchange := range rab.Exchanges {
+		if _, ok := exchange.Binding[routing]; ok {
+			return exchange
+		}
+	}
+	return nil
+}
+
+func (m *MessageParam) MountMessageParam(method, resource, routing, info, tipo, idOperation string, body interface{}) *MessageParam {
+
 }
