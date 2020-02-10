@@ -30,3 +30,8 @@ func (h *Handler) Test(m *messaging.MessageParam) *messaging.MessageParam {
 	log.Println("Mensagem recebida")
 	return m
 }
+
+func (h *Handler) CadastrarEscola(m *messaging.MessageParam) *messaging.MessageParam {
+
+	return nil
+}

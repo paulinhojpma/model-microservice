@@ -156,7 +156,7 @@ func (d *Disciplina) CadastrarDisciplina(h *Handler, idEscola int, transDB *data
 	return nil
 }
 
-// CadastrarDisciplina ...
+// AtualizarDisciplina ...
 func (d *Disciplina) AtualizarDisciplina(h *Handler, idEscola int, transDB *database.Transaction) error {
 	DB := h.DB
 	var (
@@ -209,6 +209,57 @@ func (d *Disciplina) AtualizarDisciplina(h *Handler, idEscola int, transDB *data
 	return nil
 }
 
+// DeletarDisciplina
+func (d *Disciplina) DeletarDisciplina(h *Handler, idEscola int, transDB *database.Transaction) error {
+	DB := h.DB
+	var (
+		erroTransDB error
+	)
+	if transDB == nil {
+		if transDB, erroTransDB = DB.StartTransaction(); erroTransDB != nil {
+			return nil
+		}
+		defer func() {
+			if transDB != nil {
+				if erroTransDB != nil {
+					transDB.Rollback()
+				} else {
+					transDB.Commit()
+				}
+			}
+		}()
+
+	}
+
+	argMap := map[string]interface{}{
+		"id_escola":     idEscola,
+		"id_disciplina": d.IDDisciplina,
+	}
+
+	rowIdDisciplina, errInsertDisciplina := transDB.SelectSliceScan(database.SQLDeleteDisciplina, argMap)
+	if errInsertDisciplina != nil {
+		erroTransDB = errInsertDisciplina
+		return errInsertDisciplina
+	}
+
+	idDisciplina := rowNilInt(rowIdDisciplina[0], 0)
+	if idDisciplina == 0 {
+		erroTransDB = ErrorAtualizar
+		return ErrorAtualizar
+	}
+	if len(d.Ementas) != 0 {
+		for _, e := range d.Ementas {
+			errEm := e.DeleteEmenta(h, d.IDDisciplina, transDB)
+			if errEm != nil {
+				erroTransDB = errEm
+				return errEm
+			}
+		}
+	}
+
+	return nil
+}
+
 func (e *Ementa) cadastrarEmenta(h *Handler, idDisciplina int, transDB *database.Transaction) error {
 	argMap := map[string]interface{}{
 		"carga_horaria": e.CargaHoraria,
@@ -219,6 +270,19 @@ func (e *Ementa) cadastrarEmenta(h *Handler, idDisciplina int, transDB *database
 	}
 
 	rowIdEmenta, errInsertEmenta := transDB.SelectSliceScan(database.SQLInsertEmenta, argMap)
+	if errInsertEmenta != nil {
+		return errInsertEmenta
+	}
+	e.IDEmenta = rowNilInt(rowIdEmenta[0], 0)
+	return nil
+}
+
+func (e *Ementa) DeleteEmenta(h *Handler, idDisciplina int, transDB *database.Transaction) error {
+	argMap := map[string]interface{}{
+		"id_disciplina": idDisciplina,
+	}
+
+	rowIdEmenta, errInsertEmenta := transDB.SelectSliceScan(database.SQLDeleteEmenta, argMap)
 	if errInsertEmenta != nil {
 		return errInsertEmenta
 	}

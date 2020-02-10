@@ -178,9 +178,14 @@ func main() {
 			log.Println("recebendo mensagem")
 			log.Println(string(msg.Body))
 			log.Println("Método - ", msg.Method)
-			newMsg := manager.CallService("test", msg)
+			path := web.PathMethod(msg.Method, msg.Resource)
+			newMsg := manager.CallService(path, msg)
 			log.Println(newMsg)
-
+			errMessa := manager.ManagerMessage(*imessa, newMsg)
+			if errMessa != nil {
+				// TODO: colocar o serviço de loggerr
+				log.Println("erro a retornar a mensagem - ", errMsg)
+			}
 		}
 	}()
 

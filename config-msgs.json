@@ -1,5 +1,5 @@
 {
-  
+
   "args": {
     "exchange": {
       "autoDelete": false,
@@ -17,8 +17,6 @@
         "noWait": false,
         "bindingKeys": [
           "escola",
-          "turma",
-          "aluno"
         ]
       }
     ]

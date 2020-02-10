@@ -1,6 +1,9 @@
 package web
 
 import (
+	"fmt"
+	"strings"
+
 	"sab.io/escola-service/cache"
 	"sab.io/escola-service/database"
 	"sab.io/escola-service/logger"
@@ -29,4 +32,8 @@ func rowNil(r database.Row, column int) string {
 		return r.String(column)
 	}
 	return ""
+}
+
+func PathMethod(method, resource string) string {
+	return strings.ToUpper(fmt.Sprintf("%s:%s", method, resource))
 }

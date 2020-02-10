@@ -99,14 +99,22 @@ const (
 	SQLInsertEndereco = `INSERT INTO public.endereco( logradouro, bairro, cidade, uf, cep, numero, complemento)
 	VALUES ( '%(logradouro)s', '%(bairro)s', '%(cidade)s', '%(uf)s', '%(cep)s', '%(numero)s', '%(complemento)s') returning id_endereco;`
 	SQLInsertDisciplina = `INSERT INTO escola.disciplina( id_escola, nome, descricao)	VALUES (%(id_escola)d, '%(nome)s', '%(descricao)s') returning id_disciplina;`
-	SQLInsertEmenta     = `INSERT INTO escola.serie_disciplina(id_serie, id_disciplina, carga_horaria, ementa)	
-							VALUES ( %(id_serie)d, %(id_disciplina)d, %(carga_horaria)d, '%(ementa)s') 
-							ON CONFLICT ON CONSTRAINT unique_serie_disciplina 
-							DO UPDATE SET  carga_horaria =  %(carga_horaria)d, ementa = '%(ementa)s', ativo= %(ativo)t 
+	SQLInsertEmenta     = `INSERT INTO escola.serie_disciplina(id_serie, id_disciplina, carga_horaria, ementa)
+							VALUES ( %(id_serie)d, %(id_disciplina)d, %(carga_horaria)d, '%(ementa)s')
+							ON CONFLICT ON CONSTRAINT unique_serie_disciplina
+							DO UPDATE SET  carga_horaria =  %(carga_horaria)d, ementa = '%(ementa)s', ativo= %(ativo)t
 							returning id_serie_disciplina;`
 
 	// UPDATES
 	SQLUpdateDisciplina = `UPDATE escola.disciplina
 	SET  nome= '%(nome)s', descricao= '%(descricao)s'
 	WHERE id_disciplina = %(id_disciplina)d AND id_escola = %(id_escola)d  returning id_disciplina;`
+
+	// DELETE
+	SQLDeleteDisciplina = `UPDATE escola.disciplina
+	SET  ativo = false
+	WHERE id_disciplina = %(id_disciplina)d AND id_escola = %(id_escola)d  returning id_disciplina;`
+	SQLDeleteEmenta = `UPDATE escola.serie_disciplina
+	SET  ativo = false
+	WHERE id_disciplina = %(id_disciplina)d	returning id_serie_disciplina;`
 )

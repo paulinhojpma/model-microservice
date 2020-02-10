@@ -12,6 +12,12 @@ import (
 const (
 	//MAXIDDLESCHANNELS numero maximo de channels que podem ser arb
 	MAXIDDLESCHANNELS = 20
+	// TODO: fazer dinamico de acordo com o arquivo de configuração
+	//routing keys para enviar mensagem para o serviços
+	ESCOLA = "escola"
+	CLIENT = "client"
+	AULA   = "aula"
+	TURMA  = "turma"
 )
 
 //Rabbit connexao a fila RabbitMQ
@@ -19,6 +25,7 @@ type Rabbit struct {
 	Connection *amqp.Connection
 	Channels   []*Channel
 	Exchange   *Exchange `json:"exchange"`
+	routings   map[string]string
 }
 
 //Channel canal de uma connexão e o status
@@ -264,7 +271,7 @@ func (rab Rabbit) ReceiveMessage(routing string) (<-chan MessageParam, error) {
 			d.Ack(false)
 		}
 	}()
-	time.Sleep(time.Second)
+	// time.Sleep(time.Second)
 	return msgChan, nil
 }
 
