@@ -526,6 +526,6 @@ func (rab Rabbit) findExchangeByRoute(routing string) *Exchange {
 	return nil
 }
 
-func (m *MessageParam) MountMessageParam(method, resource, routing, info, tipo, idOperation string, body interface{}) *MessageParam {
-
-}
+// func (m *MessageParam) MountMessageParam(method, resource, routing, info, tipo, idOperation string, body interface{}) *MessageParam {
+//
+// }

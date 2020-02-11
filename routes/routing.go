@@ -32,6 +32,9 @@ func (m *Manager) ManagerMessage(client messaging.IMessageClient, msg *messaging
 		if _, ok := msg.Args["correlationId"]; ok {
 			return client.RespondMessage(msg.Args["replyTo"].(string), msg)
 		}
+		if _, ok := msg.Args["replyTo"]; !ok {
+			msg.Args["replyTo"] = messaging.CLIENT
+		}
 		return client.PublishMessage(msg.Args["replyTo"].(string), msg)
 	}
 	return nil

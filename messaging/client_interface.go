@@ -32,15 +32,15 @@ type OptionsMessageCLient struct {
 
 //MessageParam ...
 type MessageParam struct {
-	Method      string              `json:"method"`
-	Query       map[string][]string `json:"query"`
-	Params      map[string]int      `json:"params"`
-	Resource    string              `json:"resource"`
-	Type        string              `json:"type"`
-	Status      int                 `json:"status"`
-	IDOperation string              `json:"idOperation"`
-	Info        string              `json:"info"`
-	Body        []byte
+	Method      string                 `json:"method"`
+	Query       map[string][]string    `json:"query"`
+	Params      map[string]int         `json:"params"`
+	Resource    string                 `json:"resource"`
+	Type        string                 `json:"type"`
+	Status      int                    `json:"status"`
+	IDOperation string                 `json:"idOperation"`
+	Info        string                 `json:"info"`
+	Body        []byte                 `json:"body"`
 	Args        map[string]interface{} `json:"args"`
 }
 
