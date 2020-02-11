@@ -8,7 +8,6 @@ import (
 func NewRoutes(h *Handler) *route.Manager {
 	manager := route.NewManager()
 
-	manager.AddRoute("test", h.Test)
 	manager.AddRoute("POST:ESCOLA", h.CadastrarEscola)
 	manager.AddRoute("GET:ESCOLAS", h.GetEscolas)
 	manager.AddRoute("GET:ESCOLA", h.GetEscola)
@@ -18,6 +17,7 @@ func NewRoutes(h *Handler) *route.Manager {
 	manager.AddRoute("GET:DISCIPLINA", h.GetDisciplina)
 	manager.AddRoute("PUT:DISCIPLINA", h.AtualizaDisciplina)
 	manager.AddRoute("DEL:DISCIPLINA", h.DeleteDisciplina)
+	manager.AddRoute("DEL:EMENTA", h.DeleteEmenta)
 
 	return manager
 }

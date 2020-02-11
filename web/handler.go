@@ -329,3 +329,49 @@ func (h *Handler) DeleteDisciplina(m *messaging.MessageParam) *messaging.Message
 
 	return m
 }
+
+func (h *Handler) DeleteEmenta(m *messaging.MessageParam) *messaging.MessageParam {
+	logg := *h.Logger
+	memCache := *h.Cache
+	ementa := &Ementa{}
+	idDisciplina := m.Params["idDisciplina"]
+	errJSON := json.Unmarshal(m.Body, ementa)
+	if errJSON != nil {
+		log.Println(errJSON)
+		logg.Send(logger.ERROR, errJSON.Error(), m.IDOperation)
+		return nil
+	}
+	errCad := ementa.DeleteEmenta(h, idDisciplina, nil)
+	if errCad != nil {
+		logg.Send(logger.ERROR, errCad.Error(), m.IDOperation)
+		m.Type = messaging.TYPE_ERROR
+		m.Body = []byte(errCad.Error())
+		return m
+	}
+	disciplina := &Disciplina{}
+	errCache := memCache.GetValue(fmt.Sprintf("disciplina:%d", idDisciplina), disciplina)
+	if errCache != nil {
+		logg.Send(logger.WARNING, errCache.Error(), m.IDOperation)
+	}
+	if disciplina.IDDisciplina != 0 {
+		for i, ement := range disciplina.Ementas {
+			if ement.IDEmenta == ementa.IDEmenta {
+				disciplina.Ementas[i] = ementa
+			}
+		}
+		errCache := memCache.SetValue(fmt.Sprintf("disciplina:%d", idDisciplina), disciplina, timeDefaultCache)
+		if errCache != nil {
+			logg.Send(logger.WARNING, errCache.Error(), m.IDOperation)
+		}
+	}
+	body, errJSONB := json.Marshal(ementa)
+	if errJSONB != nil {
+		log.Println(errJSONB)
+		logg.Send(logger.ERROR, errJSONB.Error(), m.IDOperation)
+		return nil
+	}
+
+	m.Type = messaging.TYPE_RESPONSE
+	m.Body = body
+	return m
+}
