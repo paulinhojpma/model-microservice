@@ -28,11 +28,15 @@ func NewManager() *Manager {
 
 // ManagerMessage ...
 func (m *Manager) ManagerMessage(client messaging.IMessageClient, msg *messaging.MessageParam) error {
+	if msg.Args == nil {
+		msg.Args = make(map[string]interface{})
+	}
 	if msg != nil {
 		if _, ok := msg.Args["correlationId"]; ok {
 			return client.RespondMessage(msg.Args["replyTo"].(string), msg)
 		}
 		if _, ok := msg.Args["replyTo"]; !ok {
+
 			msg.Args["replyTo"] = messaging.CLIENT
 		}
 		return client.PublishMessage(msg.Args["replyTo"].(string), msg)

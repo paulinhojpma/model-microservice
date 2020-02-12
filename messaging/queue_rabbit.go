@@ -58,7 +58,7 @@ type Exchange struct {
 }
 
 //ConnectQueue representa uma conexão com o serviço RabbitMQ
-func (rab Rabbit) connectService(config *OptionsMessageCLient) error {
+func (rab *Rabbit) connectService(config *OptionsMessageCLient) error {
 
 	//cria uma conexão com o serviço de mensagens
 	conn, err := amqp.Dial(config.URL)
@@ -94,7 +94,7 @@ func (rab Rabbit) connectService(config *OptionsMessageCLient) error {
 	return nil
 }
 
-func (rab Rabbit) generateIdleChannels(maxPoolSize int) error {
+func (rab *Rabbit) generateIdleChannels(maxPoolSize int) error {
 	if rab.Connection.IsClosed() {
 		return errors.New("Conexão com a fila encerrada")
 	}
@@ -123,7 +123,7 @@ func (rab Rabbit) generateIdleChannels(maxPoolSize int) error {
 }
 
 //retorna um canal que esteja ativo e válido
-func (rab Rabbit) getActiveChannel() (*Channel, error) {
+func (rab *Rabbit) getActiveChannel() (*Channel, error) {
 
 	if len(rab.Channels) > 0 {
 		for _, channel := range rab.Channels {
@@ -148,7 +148,7 @@ func (chann *Channel) close() error {
 
 //PublishMessage publica na fila de mensagens ele manda a mensagem e
 //espera a confiramção de ser enviada para a fila, caso seja negado ele envia um erro
-func (rab Rabbit) PublishMessage(routing string, params *MessageParam) error {
+func (rab *Rabbit) PublishMessage(routing string, params *MessageParam) error {
 
 	c, erroCh := rab.getActiveChannel()
 	if erroCh != nil {
@@ -183,7 +183,7 @@ func (rab Rabbit) PublishMessage(routing string, params *MessageParam) error {
 }
 
 // RespondMessage ... o mesmo que publish message, mas responde a uma mensagem
-func (rab Rabbit) RespondMessage(routing string, params *MessageParam) error {
+func (rab *Rabbit) RespondMessage(routing string, params *MessageParam) error {
 
 	c, erroCh := rab.getActiveChannel()
 	if erroCh != nil {
@@ -219,7 +219,7 @@ func (rab Rabbit) RespondMessage(routing string, params *MessageParam) error {
 }
 
 //ReceiveMessage recebe as mensagens e devolve um channel com as menssagens enviadas assincronicamente
-func (rab Rabbit) ReceiveMessage(routing string) (<-chan MessageParam, error) {
+func (rab *Rabbit) ReceiveMessage(routing string) (<-chan MessageParam, error) {
 	c, errChannel := rab.getActiveChannel()
 	if errChannel != nil {
 		return nil, errChannel
@@ -272,7 +272,7 @@ func (rab Rabbit) ReceiveMessage(routing string) (<-chan MessageParam, error) {
 }
 
 // PublishAndReceiveMessage publica e recebe uma mensagem de forma síncrona.
-func (rab Rabbit) PublishAndReceiveMessage(routing string, params *MessageParam) (*MessageParam, error) {
+func (rab *Rabbit) PublishAndReceiveMessage(routing string, params *MessageParam) (*MessageParam, error) {
 	c, erroCh := rab.getActiveChannel()
 	if erroCh != nil {
 		return nil, erroCh
@@ -354,7 +354,7 @@ func (rab Rabbit) PublishAndReceiveMessage(routing string, params *MessageParam)
 	return msg, nil
 }
 
-func (rab Rabbit) publishMessage(routing string, c *Channel, publishing *amqp.Publishing, anomQuueu bool) error {
+func (rab *Rabbit) publishMessage(routing string, c *Channel, publishing *amqp.Publishing, anomQuueu bool) error {
 
 	confirms := c.Channel.NotifyPublish(make(chan amqp.Confirmation, 1))
 	if err := c.Channel.Confirm(false); err != nil {
@@ -509,7 +509,7 @@ func (c *Channel) unLockChannel() {
 	c.Used = false
 }
 
-func (rab Rabbit) removeCloseChannels() {
+func (rab *Rabbit) removeCloseChannels() {
 	for i, channel := range rab.Channels {
 		if channel.Closed {
 			rab.Channels[i] = nil
@@ -517,7 +517,7 @@ func (rab Rabbit) removeCloseChannels() {
 	}
 }
 
-func (rab Rabbit) findExchangeByRoute(routing string) *Exchange {
+func (rab *Rabbit) findExchangeByRoute(routing string) *Exchange {
 	for _, exchange := range rab.Exchanges {
 		if _, ok := exchange.Binding[routing]; ok {
 			return exchange

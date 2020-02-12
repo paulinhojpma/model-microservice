@@ -22,7 +22,7 @@ type Fluentd struct {
 	Service string
 }
 
-func (f Fluentd) connectServiceLogger(o *OptionsConfigLogger) error {
+func (f *Fluentd) connectServiceLogger(o *OptionsConfigLogger) error {
 	config := fluent.Config{
 		FluentPort: o.Port,
 		FluentHost: o.Host,
@@ -32,13 +32,15 @@ func (f Fluentd) connectServiceLogger(o *OptionsConfigLogger) error {
 	if errLogger != nil {
 		return errLogger
 	}
+	log.Println("Serviço do fluentd - ", logger)
 	f.Logger = logger
 	f.Service = o.Args["service"].(string)
 	return nil
 }
 
 // Send ...
-func (f Fluentd) Send(tyype string, msg string, idOperation string) {
+func (f *Fluentd) Send(tyype string, msg string, idOperation string) {
+	log.Println("Objeto fluent - ", f.Logger)
 	go func() {
 		t := time.Now()
 		data := LoggerData{
@@ -47,8 +49,7 @@ func (f Fluentd) Send(tyype string, msg string, idOperation string) {
 		}
 		errorPost := f.Logger.PostWithTime(f.Service+tyype, t, data)
 		if errorPost != nil {
-			log.Println(errorPost)
+			log.Println("ERRO AO POSTAR - ", errorPost)
 		}
-
 	}()
 }

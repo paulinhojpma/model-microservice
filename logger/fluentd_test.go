@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
-	"testing"
-	"time"
 )
 
 func initFluentd() (*ILogger, error) {
@@ -30,13 +28,13 @@ func initFluentd() (*ILogger, error) {
 	return logger, nil
 }
 
-func TestSendLogger(t *testing.T) {
-	logger, err := initFluentd()
-	if err != nil {
-		t.Error("Expect nothing got ", err)
-		return
-	}
-	l := *logger
-	l.Send(INFO, "testando", "11111111")
-	time.Sleep(time.Second * 10)
-}
+// func TestSendLogger(t *testing.T) {
+// 	logger, err := initFluentd()
+// 	if err != nil {
+// 		t.Error("Expect nothing got ", err)
+// 		return
+// 	}
+// 	l := *logger
+// 	l.Send(INFO, "testando", "11111111")
+// 	time.Sleep(time.Second * 10)
+// }

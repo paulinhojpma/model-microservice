@@ -108,11 +108,12 @@ func main() {
 	log.Println("Logger conectado")
 
 	handler.Logger = clientLogger
-
 	// loggerr := *clientLogger
 
 	// clientLogger.Send(logger.INFO, "testando", "1111111")
-	(*handler.Logger).Send(logger.INFO, "testando", "1111111")
+	// (*handler.Logger).Send(logger.INFO, "testando", "1111111")
+	lg := *handler.Logger
+	lg.Send(logger.INFO, "testando", "1111111")
 
 	// inicializando serviço do DataBase
 	optionDB := &database.OptionsDB{DriverName: configNew.DatabaseDriver, IP: configNew.DBBizHost, Porta: configNew.DBBizPorta,

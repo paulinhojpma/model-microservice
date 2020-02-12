@@ -1,5 +1,7 @@
 package logger
 
+import "log"
+
 type ILogger interface {
 	connectServiceLogger(o *OptionsConfigLogger) error
 	Send(tyype string, msg string, idOperation string)
@@ -23,6 +25,7 @@ func (o *OptionsConfigLogger) ConfiguraLogger() (*ILogger, error) {
 	var client ILogger
 	switch o.Driver {
 	case "fluentd":
+		log.Println("Tentando conectar no fluentd")
 		fluentd := &Fluentd{}
 		errFluentd := fluentd.connectServiceLogger(o)
 		if errFluentd != nil {
