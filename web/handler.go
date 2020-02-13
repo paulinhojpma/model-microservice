@@ -44,22 +44,29 @@ func (h *Handler) CadastrarEscola(m *messaging.MessageParam) *messaging.MessageP
 	logg := *h.Logger
 	memCache := *h.Cache
 	escola := &Escola{}
-	errJSON := json.Unmarshal(m.Body, escola)
-	if errJSON != nil {
-		log.Println(errJSON)
-		logg.Send(logger.ERROR, errJSON.Error(), m.IDOperation)
-		return nil
-	}
-	errCad := escola.CadastrarEscola(h, nil)
-	if errCad != nil {
-		logg.Send(logger.ERROR, errCad.Error(), m.IDOperation)
+	err := json.Unmarshal(m.Body, escola)
+	if err != nil {
+		log.Println(err)
+		logg.Send(logger.ERROR, err.Error(), m.IDOperation)
 		m.Type = messaging.TYPE_ERROR
-		m.Body = []byte(errCad.Error())
+		m.Status = http.StatusBadRequest
+		m.Info = err.Error()
+		m.Body = []byte("")
+		return m
+
+	}
+	err = escola.CadastrarEscola(h, nil)
+	if err != nil {
+		logg.Send(logger.ERROR, err.Error(), m.IDOperation)
+		m.Type = messaging.TYPE_ERROR
+		m.Status = http.StatusUnauthorized
+		m.Info = err.Error()
+		m.Body = []byte("")
 		return m
 	}
-	errCache := memCache.SetValue(fmt.Sprintf("escola:%d", escola.IDEscola), escola, timeDefaultCache)
-	if errCache != nil {
-		logg.Send(logger.WARNING, errCache.Error(), m.IDOperation)
+	err = memCache.SetValue(fmt.Sprintf("escola:%d", escola.IDEscola), escola, timeDefaultCache)
+	if err != nil {
+		logg.Send(logger.WARNING, err.Error(), m.IDOperation)
 	}
 	body, errJSONB := json.Marshal(escola)
 	if errJSONB != nil {
@@ -69,6 +76,8 @@ func (h *Handler) CadastrarEscola(m *messaging.MessageParam) *messaging.MessageP
 	}
 	m.Type = messaging.TYPE_RESPONSE
 	m.Body = body
+	m.Status = http.StatusCreated
+	m.Info = EscolaCad
 
 	return m
 }
@@ -86,9 +95,15 @@ func (h *Handler) GetEscolas(m *messaging.MessageParam) *messaging.MessageParam 
 	if errJSONB != nil {
 		log.Println(errJSONB)
 		logg.Send(logger.ERROR, errJSONB.Error(), m.IDOperation)
-		return nil
+		m.Type = messaging.TYPE_ERROR
+		m.Status = http.StatusInternalServerError
+		m.Info = errJSONB.Error()
+		m.Body = []byte("")
+		return m
 	}
 	m.Type = messaging.TYPE_RESPONSE
+	m.Status = http.StatusOK
+	m.Info = EscolasGet
 	m.Body = body
 	return m
 }
@@ -99,35 +114,43 @@ func (h *Handler) GetEscola(m *messaging.MessageParam) *messaging.MessageParam {
 	memCache := *h.Cache
 	IDEscola := m.Params["idEscola"]
 	escola := &Escola{}
-	errCache := memCache.GetValue(fmt.Sprintf("escola:%d", IDEscola), escola)
-	if errCache != nil {
-		logg.Send(logger.WARNING, errCache.Error(), m.IDOperation)
+	err := memCache.GetValue(fmt.Sprintf("escola:%d", IDEscola), escola)
+	if err != nil {
+		logg.Send(logger.WARNING, err.Error(), m.IDOperation)
 	}
+
 	if escola.IDEscola == 0 {
-		escolaB, errEscola := GetEscola(h, IDEscola)
-		if errEscola != nil {
-			logg.Send(logger.ERROR, errEscola.Error(), m.IDOperation)
+		escola, err = GetEscola(h, IDEscola)
+		if err != nil {
+			logg.Send(logger.ERROR, err.Error(), m.IDOperation)
 			m.Type = messaging.TYPE_ERROR
-			m.Body = []byte(errEscola.Error())
+			m.Info = err.Error()
+			m.Status = http.StatusUnauthorized
+			m.Body = []byte("")
 			return m
 		}
-		escola = escolaB
 
 	}
-
-	errCache = memCache.SetValue(fmt.Sprintf("escola:%d", IDEscola), escola, timeDefaultCache)
-	if errCache != nil {
-		logg.Send(logger.WARNING, errCache.Error(), m.IDOperation)
+	err = memCache.SetValue(fmt.Sprintf("escola:%d", IDEscola), escola, timeDefaultCache)
+	if err != nil {
+		logg.Send(logger.WARNING, err.Error(), m.IDOperation)
 	}
 
 	body, errJSONB := json.Marshal(escola)
 	if errJSONB != nil {
 		log.Println(errJSONB)
 		logg.Send(logger.ERROR, errJSONB.Error(), m.IDOperation)
-		return nil
+		m.Type = messaging.TYPE_ERROR
+		m.Status = http.StatusInternalServerError
+		m.Info = errJSONB.Error()
+		m.Body = []byte("")
+		return m
+
 	}
 
 	m.Type = messaging.TYPE_RESPONSE
+	m.Status = http.StatusOK
+	m.Info = EscolaGet
 	m.Body = body
 	return m
 }
@@ -137,39 +160,53 @@ func (h *Handler) CadastrarUnidade(m *messaging.MessageParam) *messaging.Message
 	memCache := *h.Cache
 	unidade := &Unidade{}
 	idEscola := m.Params["idEscola"]
-	errJSON := json.Unmarshal(m.Body, unidade)
-	if errJSON != nil {
-		log.Println(errJSON)
-		logg.Send(logger.ERROR, errJSON.Error(), m.IDOperation)
-		return nil
-	}
-	errCad := unidade.CadastrarUnidade(h, idEscola, nil)
-	if errCad != nil {
-		logg.Send(logger.ERROR, errCad.Error(), m.IDOperation)
+	err := json.Unmarshal(m.Body, unidade)
+	if err != nil {
+		log.Println(err)
+		logg.Send(logger.ERROR, err.Error(), m.IDOperation)
 		m.Type = messaging.TYPE_ERROR
-		m.Body = []byte(errCad.Error())
+		m.Status = http.StatusBadRequest
+		m.Info = err.Error()
+		m.Body = []byte("")
+		return m
+	}
+
+	err = unidade.CadastrarUnidade(h, idEscola, nil)
+	if err != nil {
+		logg.Send(logger.ERROR, err.Error(), m.IDOperation)
+		m.Type = messaging.TYPE_ERROR
+		m.Type = messaging.TYPE_ERROR
+		m.Status = http.StatusUnauthorized
+		m.Info = err.Error()
+		m.Body = []byte("")
 		return m
 	}
 	escola := &Escola{}
-	errCache := memCache.GetValue(fmt.Sprintf("escola:%d", idEscola), escola)
-	if errCache != nil {
-		logg.Send(logger.WARNING, errCache.Error(), m.IDOperation)
+	err = memCache.GetValue(fmt.Sprintf("escola:%d", idEscola), escola)
+	if err != nil {
+		logg.Send(logger.WARNING, err.Error(), m.IDOperation)
 	}
 	if escola.IDEscola != 0 {
 		escola.Unidades = append(escola.Unidades, unidade)
-		errCache := memCache.SetValue(fmt.Sprintf("escola:%d", idEscola), escola, timeDefaultCache)
-		if errCache != nil {
-			logg.Send(logger.WARNING, errCache.Error(), m.IDOperation)
+		err = memCache.SetValue(fmt.Sprintf("escola:%d", idEscola), escola, timeDefaultCache)
+		if err != nil {
+			logg.Send(logger.WARNING, err.Error(), m.IDOperation)
 		}
 	}
 	body, errJSONB := json.Marshal(unidade)
 	if errJSONB != nil {
 		log.Println(errJSONB)
 		logg.Send(logger.ERROR, errJSONB.Error(), m.IDOperation)
-		return nil
+		m.Type = messaging.TYPE_ERROR
+		m.Status = http.StatusInternalServerError
+		m.Info = errJSONB.Error()
+		m.Body = []byte("")
+		return m
 	}
 
 	m.Type = messaging.TYPE_RESPONSE
+	m.Status = http.StatusCreated
+	m.Info = UnidadeCad
 	m.Body = body
 	return m
 }
@@ -180,33 +217,44 @@ func (h *Handler) CadastrarDisciplina(m *messaging.MessageParam) *messaging.Mess
 	memCache := *h.Cache
 	disciplina := &Disciplina{}
 	idEscola := m.Params["idEscola"]
-	errJSON := json.Unmarshal(m.Body, disciplina)
-	if errJSON != nil {
-		log.Println(errJSON)
-		logg.Send(logger.ERROR, errJSON.Error(), m.IDOperation)
-		return nil
-	}
-	errCad := disciplina.CadastrarDisciplina(h, idEscola, nil)
-	if errCad != nil {
-		logg.Send(logger.ERROR, errCad.Error(), m.IDOperation)
+	err := json.Unmarshal(m.Body, disciplina)
+	if err != nil {
+		log.Println(err)
+		logg.Send(logger.ERROR, err.Error(), m.IDOperation)
 		m.Type = messaging.TYPE_ERROR
-		m.Body = []byte(errCad.Error())
+		m.Status = http.StatusBadRequest
+		m.Info = err.Error()
+		m.Body = []byte("")
 		return m
 	}
-	errCache := memCache.SetValue(fmt.Sprintf("disciplina:%d", disciplina.IDDisciplina), disciplina, timeDefaultCache)
-	if errCache != nil {
-		logg.Send(logger.WARNING, errCache.Error(), m.IDOperation)
+	err = disciplina.CadastrarDisciplina(h, idEscola, nil)
+	if err != nil {
+		logg.Send(logger.ERROR, err.Error(), m.IDOperation)
+		m.Type = messaging.TYPE_ERROR
+		m.Status = http.StatusUnauthorized
+		m.Info = err.Error()
+		m.Body = []byte("")
+		return m
+	}
+	err = memCache.SetValue(fmt.Sprintf("disciplina:%d", disciplina.IDDisciplina), disciplina, timeDefaultCache)
+	if err != nil {
+		logg.Send(logger.WARNING, err.Error(), m.IDOperation)
 	}
 
 	body, errJSONB := json.Marshal(disciplina)
 	if errJSONB != nil {
 		log.Println(errJSONB)
 		logg.Send(logger.ERROR, errJSONB.Error(), m.IDOperation)
-		return nil
+		m.Type = messaging.TYPE_ERROR
+		m.Status = http.StatusCreated
+		m.Info = DisciplinaCadWarning
+		m.Body = []byte("")
+		return m
 	}
 	m.Type = messaging.TYPE_RESPONSE
+	m.Status = http.StatusCreated
+	m.Info = DisciplinaCad
 	m.Body = body
-
 	return m
 }
 
@@ -227,6 +275,8 @@ func (h *Handler) GetDisciplinas(m *messaging.MessageParam) *messaging.MessagePa
 		return nil
 	}
 	m.Type = messaging.TYPE_RESPONSE
+	m.Status = http.StatusOK
+	m.Info = DisciplinasGet
 	m.Body = body
 	return m
 }
@@ -238,29 +288,40 @@ func (h *Handler) GetDisciplina(m *messaging.MessageParam) *messaging.MessagePar
 	IDEscola := m.Params["idEscola"]
 	IDDisciplina := m.Params["idDisciplina"]
 	disciplina := &Disciplina{}
-	errCache := memCache.GetValue(fmt.Sprintf("disciplina:%d", IDDisciplina), disciplina)
-	if errCache != nil {
-		logg.Send(logger.WARNING, errCache.Error(), m.IDOperation)
+	err := memCache.GetValue(fmt.Sprintf("disciplina:%d", IDDisciplina), disciplina)
+	if err != nil {
+		logg.Send(logger.WARNING, err.Error(), m.IDOperation)
 	}
 	if disciplina.IDDisciplina == 0 {
-		disciplinaB, errDisciplina := GetDisciplinaByID(h, IDEscola, IDDisciplina)
-		if errDisciplina != nil {
-			logg.Send(logger.ERROR, errDisciplina.Error(), m.IDOperation)
+		disciplina, err = GetDisciplinaByID(h, IDEscola, IDDisciplina)
+		if err != nil {
+			logg.Send(logger.ERROR, err.Error(), m.IDOperation)
 			m.Type = messaging.TYPE_ERROR
-			m.Body = []byte(errDisciplina.Error())
+			m.Info = err.Error()
+			m.Status = http.StatusUnauthorized
+			m.Body = []byte("")
 			return m
 		}
-		disciplina = disciplinaB
 
+	}
+	err = memCache.SetValue(fmt.Sprintf("disciplina:%d", IDDisciplina), disciplina, timeDefaultCache)
+	if err != nil {
+		logg.Send(logger.WARNING, err.Error(), m.IDOperation)
 	}
 	body, errJSONB := json.Marshal(disciplina)
 	if errJSONB != nil {
 		log.Println(errJSONB)
 		logg.Send(logger.ERROR, errJSONB.Error(), m.IDOperation)
-		return nil
+		m.Type = messaging.TYPE_ERROR
+		m.Info = errJSONB.Error()
+		m.Status = http.StatusUnauthorized
+		m.Body = []byte("")
+		return m
 	}
 
 	m.Type = messaging.TYPE_RESPONSE
+	m.Status = http.StatusOK
+	m.Info = DisciplinaGet
 	m.Body = body
 	return m
 }
@@ -271,33 +332,44 @@ func (h *Handler) AtualizaDisciplina(m *messaging.MessageParam) *messaging.Messa
 	memCache := *h.Cache
 	disciplina := &Disciplina{}
 	idEscola := m.Params["idEscola"]
-	errJSON := json.Unmarshal(m.Body, disciplina)
-	if errJSON != nil {
-		log.Println(errJSON)
-		logg.Send(logger.ERROR, errJSON.Error(), m.IDOperation)
-		return nil
-	}
-	errCad := disciplina.AtualizarDisciplina(h, idEscola, nil)
-	if errCad != nil {
-		logg.Send(logger.ERROR, errCad.Error(), m.IDOperation)
+	err := json.Unmarshal(m.Body, disciplina)
+	if err != nil {
+		log.Println(err)
+		logg.Send(logger.ERROR, err.Error(), m.IDOperation)
 		m.Type = messaging.TYPE_ERROR
-		m.Body = []byte(errCad.Error())
+		m.Info = err.Error()
+		m.Status = http.StatusBadRequest
+		m.Body = []byte("")
 		return m
 	}
-	errCache := memCache.SetValue(fmt.Sprintf("disciplina:%d", disciplina.IDDisciplina), disciplina, timeDefaultCache)
-	if errCache != nil {
-		logg.Send(logger.WARNING, errCache.Error(), m.IDOperation)
+	err = disciplina.AtualizarDisciplina(h, idEscola, nil)
+	if err != nil {
+		logg.Send(logger.ERROR, err.Error(), m.IDOperation)
+		m.Type = messaging.TYPE_ERROR
+		m.Info = err.Error()
+		m.Status = http.StatusUnauthorized
+		m.Body = []byte("")
+		return m
+	}
+	err = memCache.SetValue(fmt.Sprintf("disciplina:%d", disciplina.IDDisciplina), disciplina, timeDefaultCache)
+	if err != nil {
+		logg.Send(logger.WARNING, err.Error(), m.IDOperation)
 	}
 
 	body, errJSONB := json.Marshal(disciplina)
 	if errJSONB != nil {
 		log.Println(errJSONB)
 		logg.Send(logger.ERROR, errJSONB.Error(), m.IDOperation)
-		return nil
+		m.Type = messaging.TYPE_ERROR
+		m.Info = DisciplinaAtuaWarning
+		m.Status = http.StatusOK
+		m.Body = []byte("")
+		return m
 	}
-	m.Type = messaging.TYPE_RESPONSE
+	m.Type = messaging.TYPE_ERROR
+	m.Info = DisciplinaAtua
+	m.Status = http.StatusOK
 	m.Body = body
-
 	return m
 }
 
@@ -313,9 +385,16 @@ func (h *Handler) DeleteDisciplina(m *messaging.MessageParam) *messaging.Message
 	if err != nil {
 		logg.Send(logger.WARNING, err.Error(), m.IDOperation)
 	}
-	disciplina, err = GetDisciplinaByID(h, idEscola, idDisciplina)
-	if err != nil {
-		logg.Send(logger.ERROR, err.Error(), m.IDOperation)
+	if disciplina.IDDisciplina == 0 {
+		disciplina, err = GetDisciplinaByID(h, idEscola, idDisciplina)
+		if err != nil {
+			logg.Send(logger.ERROR, err.Error(), m.IDOperation)
+			m.Type = messaging.TYPE_ERROR
+			m.Info = err.Error()
+			m.Status = http.StatusNotFound
+			m.Body = []byte("")
+			return m
+		}
 	}
 
 	// errJSON := json.Unmarshal(m.Body, disciplina)
@@ -338,7 +417,7 @@ func (h *Handler) DeleteDisciplina(m *messaging.MessageParam) *messaging.Message
 		logg.Send(logger.WARNING, err.Error(), m.IDOperation)
 	}
 
-	m.Status = http.StatusOK
+	m.Status = http.StatusNoContent
 	m.Type = messaging.TYPE_RESPONSE
 	m.Info = DisciplinaDel
 	m.Body = []byte("")
