@@ -182,11 +182,14 @@ func main() {
 			path := web.PathMethod(msg.Method, msg.Resource)
 			newMsg := manager.CallService(path, msg)
 			log.Println(newMsg)
-			errMessa := manager.ManagerMessage(*imessa, newMsg)
-			if errMessa != nil {
-				// TODO: colocar o serviço de loggerr
-				log.Println("erro a retornar a mensagem - ", errMsg)
-			}
+			go func() {
+				errMessa := manager.ManagerMessage(*imessa, newMsg)
+				if errMessa != nil {
+					// TODO: colocar o serviço de loggerr
+					log.Println("erro a retornar a mensagem - ", errMsg)
+				}
+			}()
+
 		}
 	}()
 

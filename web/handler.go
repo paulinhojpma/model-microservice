@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"time"
 
 	"sab.io/escola-service/cache"
@@ -113,6 +114,12 @@ func (h *Handler) GetEscola(m *messaging.MessageParam) *messaging.MessageParam {
 		escola = escolaB
 
 	}
+
+	errCache = memCache.SetValue(fmt.Sprintf("escola:%d", IDEscola), escola, timeDefaultCache)
+	if errCache != nil {
+		logg.Send(logger.WARNING, errCache.Error(), m.IDOperation)
+	}
+
 	body, errJSONB := json.Marshal(escola)
 	if errJSONB != nil {
 		log.Println(errJSONB)
@@ -300,32 +307,41 @@ func (h *Handler) DeleteDisciplina(m *messaging.MessageParam) *messaging.Message
 	memCache := *h.Cache
 	disciplina := &Disciplina{}
 	idEscola := m.Params["idEscola"]
-	errJSON := json.Unmarshal(m.Body, disciplina)
-	if errJSON != nil {
-		log.Println(errJSON)
-		logg.Send(logger.ERROR, errJSON.Error(), m.IDOperation)
-		return nil
+	idDisciplina := m.Params["idDisciplina"]
+
+	err := memCache.GetValue(fmt.Sprintf("disciplina:%d", idDisciplina), disciplina)
+	if err != nil {
+		logg.Send(logger.WARNING, err.Error(), m.IDOperation)
 	}
-	errCad := disciplina.DeletarDisciplina(h, idEscola, nil)
-	if errCad != nil {
-		logg.Send(logger.ERROR, errCad.Error(), m.IDOperation)
-		m.Type = messaging.TYPE_ERROR
-		m.Body = []byte(errCad.Error())
-		return m
-	}
-	errCache := memCache.SetValue(fmt.Sprintf("disciplina:%d", disciplina.IDDisciplina), disciplina, timeDefaultCache)
-	if errCache != nil {
-		logg.Send(logger.WARNING, errCache.Error(), m.IDOperation)
+	disciplina, err = GetDisciplinaByID(h, idEscola, idDisciplina)
+	if err != nil {
+		logg.Send(logger.ERROR, err.Error(), m.IDOperation)
 	}
 
-	body, errJSONB := json.Marshal(disciplina)
-	if errJSONB != nil {
-		log.Println(errJSONB)
-		logg.Send(logger.ERROR, errJSONB.Error(), m.IDOperation)
-		return nil
+	// errJSON := json.Unmarshal(m.Body, disciplina)
+	// if errJSON != nil {
+	// 	log.Println(errJSON)
+	// 	logg.Send(logger.ERROR, errJSON.Error(), m.IDOperation)
+	// 	return nil
+	// }
+	err = disciplina.DeletarDisciplina(h, idEscola, nil)
+	if err != nil {
+		logg.Send(logger.ERROR, err.Error(), m.IDOperation)
+		m.Type = messaging.TYPE_ERROR
+		m.Info = err.Error()
+		m.Status = http.StatusNotFound
+		m.Body = []byte("")
+		return m
 	}
+	err = memCache.DelValue(fmt.Sprintf("disciplina:%d", disciplina.IDDisciplina))
+	if err != nil {
+		logg.Send(logger.WARNING, err.Error(), m.IDOperation)
+	}
+
+	m.Status = http.StatusOK
 	m.Type = messaging.TYPE_RESPONSE
-	m.Body = body
+	m.Info = DisciplinaDel
+	m.Body = []byte("")
 
 	return m
 }

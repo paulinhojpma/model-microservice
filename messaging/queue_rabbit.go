@@ -126,10 +126,23 @@ func (rab *Rabbit) generateIdleChannels(maxPoolSize int) error {
 func (rab *Rabbit) getActiveChannel() (*Channel, error) {
 
 	if len(rab.Channels) > 0 {
-		for _, channel := range rab.Channels {
-			if !channel.Used && !channel.Closed {
+		for i, channel := range rab.Channels {
+			if channel.Closed {
+				ch, errChan := rab.Connection.Channel()
+				if errChan != nil {
+					log.Println(errChan)
+				} else {
+					channel.Channel = ch
+					channel.Closed = false
+					channel.Used = false
+					return channel, nil
+				}
+			}
+			if !channel.Used {
+				log.Println("Retornou channel - ", i+1)
 				return channel, nil
 			}
+
 		}
 	}
 	return nil, errors.New("Não existe channels disponíveis")
@@ -225,7 +238,8 @@ func (rab *Rabbit) ReceiveMessage(routing string) (<-chan MessageParam, error) {
 		return nil, errChannel
 	}
 	c.lockChannel()
-	defer c.unLockChannel()
+	// defer func() { c.Used = false }()
+	// defer c.unLockChannel()
 	msgChan := make(chan MessageParam)
 	msg := &MessageParam{}
 	delivery, err := c.Channel.Consume(
@@ -273,6 +287,9 @@ func (rab *Rabbit) ReceiveMessage(routing string) (<-chan MessageParam, error) {
 
 // PublishAndReceiveMessage publica e recebe uma mensagem de forma síncrona.
 func (rab *Rabbit) PublishAndReceiveMessage(routing string, params *MessageParam) (*MessageParam, error) {
+	if params.Args == nil {
+		params.Args = make(map[string]interface{})
+	}
 	c, erroCh := rab.getActiveChannel()
 	if erroCh != nil {
 		return nil, erroCh
@@ -360,7 +377,17 @@ func (rab *Rabbit) publishMessage(routing string, c *Channel, publishing *amqp.P
 	if err := c.Channel.Confirm(false); err != nil {
 		log.Fatalf("confirm.select destination: %s", err)
 	}
-	count := 0
+	defer func() {
+		// only ack the source delivery when the destination acks the publishing
+		if confirmed := <-confirms; confirmed.Ack {
+			log.Println("Mensagem enviada para a fila - ", confirmed.DeliveryTag)
+			// return nil
+		} else {
+			log.Println("Mensagem não confirmada - ", confirmed.DeliveryTag)
+			// return nil
+		}
+	}()
+	// count := 0
 	exName := ""
 	if !anomQuueu {
 		exchange := rab.findExchangeByRoute(routing)
@@ -370,34 +397,38 @@ func (rab *Rabbit) publishMessage(routing string, c *Channel, publishing *amqp.P
 		exName = exchange.name
 	}
 	log.Println("Nome Exchange - ", exName)
-	for {
-
-		errPubli := c.Channel.Publish(
-			exName,  // exchange
-			routing, // routing key
-			false,   // mandatory
-			false,   // immediate
-			*publishing)
-
-		if errPubli != nil {
-			return errPubli
-		}
-
-		count++
-
-		// only ack the source delivery when the destination acks the publishing
-		if confirmed := <-confirms; confirmed.Ack {
-			log.Println("Mensagem enviada para a fila")
-			return nil
-		}
-		//se após três tentativas a mensagem não for confirmada retorna uma mensagem de erro
-		if count > 3 {
-			return errors.New("Não foi possível entregar a mensagem")
-		}
-
+	// for {
+	log.Println("Publicando na fila de mensagens")
+	errPubli := c.Channel.Publish(
+		exName,  // exchange
+		routing, // routing key
+		false,   // mandatory
+		false,   // immediate
+		*publishing)
+	log.Println("Após enviar na fila de mensagens")
+	if errPubli != nil {
+		return errPubli
 	}
+	// count++
+	log.Println("Antes de confirmar")
+	// // only ack the source delivery when the destination acks the publishing
+	// if confirmed := <-confirms; confirmed.Ack {
+	// 	log.Println("Mensagem enviada para a fila - ", confirmed.DeliveryTag)
+	// 	// return nil
+	// } else {
+	// 	log.Println("Mensagem não confirmada - ", confirmed.DeliveryTag)
+	// 	// return nil
+	// }
+	//se após três tentativas a mensagem não for confirmada retorna uma mensagem de erro
+	// if count > 3 {
+	// 	return errors.New("Não foi possível entregar a mensagem.")
+	// }
+
+	// }
+	return nil
 
 }
+
 func (c *Channel) configToExchange(exc []interface{}) ([]*Exchange, error) {
 
 	exchanges := make([]*Exchange, len(exc))
@@ -507,6 +538,9 @@ func (c *Channel) lockChannel() {
 //unLockChannel destrava o canal atual que estava sendo utilizado
 func (c *Channel) unLockChannel() {
 	c.Used = false
+	c.Closed = true
+	c.Channel.Close()
+	// c = nil
 }
 
 func (rab *Rabbit) removeCloseChannels() {
