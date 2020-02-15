@@ -90,7 +90,7 @@ const (
 																) d
 															) as ementas
 															from escola.disciplina disc
-															where id_escola = %(id_escola)d
+															where id_escola = %(id_escola)d and id_disciplina = %(id_disciplina)d 
 															)t;`
 	//INSERTS
 
